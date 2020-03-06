@@ -48,6 +48,13 @@ public:
         normal = n;
     }
 
+    inline Hit &operator=(const Hit &h) {
+        t = h.t;
+        material = h.material;
+        normal = h.normal;
+        return *this;
+    }
+
 private:
     float t;
     Material *material;

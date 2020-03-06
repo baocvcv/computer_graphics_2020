@@ -16,7 +16,8 @@ public:
         this->material = material;
     }
 
-    // Intersect Ray with this object. If hit, store information in hit structure.
+    // Intersect Ray with this object. [WRONG]If hit, store information in hit structure.
+    // If hit and is closer, stores the information in hit structure
     virtual bool intersect(const Ray &r, Hit &h, float tmin) = 0;
 protected:
 
@@ -24,4 +25,3 @@ protected:
 };
 
 #endif
-

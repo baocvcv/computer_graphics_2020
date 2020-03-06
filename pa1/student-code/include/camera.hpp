@@ -6,7 +6,6 @@
 #include <float.h>
 #include <cmath>
 
-
 class Camera {
 public:
     Camera(const Vector3f &center, const Vector3f &direction, const Vector3f &up, int imgW, int imgH) {
@@ -14,6 +13,8 @@ public:
         this->direction = direction.normalized();
         this->horizontal = Vector3f::cross(this->direction, up);
         this->up = Vector3f::cross(this->horizontal, this->direction);
+        this->horizontal.normalize();
+        this->up.normalize();
         this->width = imgW;
         this->height = imgH;
     }
@@ -44,11 +45,19 @@ public:
     PerspectiveCamera(const Vector3f &center, const Vector3f &direction,
             const Vector3f &up, int imgW, int imgH, float angle) : Camera(center, direction, up, imgW, imgH) {
         // angle is in radian.
+        float distToCanvas = width / 2 / tan(angle / 2);
+        cameraToCanvasCenter = direction * distToCanvas;
     }
 
+    // @param point: a point on the canvas
     Ray generateRay(const Vector2f &point) override {
-        // 
+        Vector3f dir = cameraToCanvasCenter;
+        dir += (point.x() - width / 2 + 1) * horizontal + (point.y() - height / 2 + 1) * up;
+        return Ray(center, dir.normalized());
     }
+
+private:
+    Vector3f cameraToCanvasCenter;
 };
 
 #endif //CAMERA_H
