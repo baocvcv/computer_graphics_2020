@@ -16,8 +16,8 @@ public:
     Plane(): Object3D() {}
 
     Plane(const Vector3f &normal, float d, Material *m) : Object3D(m) {
-        this->normal = normal;
-        this->d = d;
+        this->d = d / normal.length();
+        this->normal = normal.normalized();
     }
 
     ~Plane() override = default;

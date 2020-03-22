@@ -18,7 +18,7 @@ public:
     Hit(float _t, Material *m, const Vector3f &n) {
         t = _t;
         material = m;
-        normal = n;
+        normal = n.normalized();
     }
 
     Hit(const Hit &h) {
@@ -45,7 +45,7 @@ public:
     void set(float _t, Material *m, const Vector3f &n) {
         t = _t;
         material = m;
-        normal = n;
+        normal = n.normalized();
     }
 
     inline Hit &operator=(const Hit &h) {

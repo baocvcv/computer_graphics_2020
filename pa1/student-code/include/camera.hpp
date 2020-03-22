@@ -13,8 +13,6 @@ public:
         this->direction = direction.normalized();
         this->horizontal = Vector3f::cross(this->direction, up);
         this->up = Vector3f::cross(this->horizontal, this->direction);
-        this->horizontal.normalize();
-        this->up.normalize();
         this->width = imgW;
         this->height = imgH;
     }
