@@ -6,6 +6,7 @@
 #include <float.h>
 #include <cmath>
 
+
 class Camera {
 public:
     Camera(const Vector3f &center, const Vector3f &direction, const Vector3f &up, int imgW, int imgH) {
@@ -43,19 +44,22 @@ public:
     PerspectiveCamera(const Vector3f &center, const Vector3f &direction,
             const Vector3f &up, int imgW, int imgH, float angle) : Camera(center, direction, up, imgW, imgH) {
         // angle is in radian.
-        float distToCanvas = width / 2 / tan(angle / 2);
-        cameraToCanvasCenter = direction * distToCanvas;
+        distToCanvas = imgW / 2.0 / tan(angle / 2);
     }
 
-    // @param point: a point on the canvas
     Ray generateRay(const Vector2f &point) override {
-        Vector3f dir = cameraToCanvasCenter;
-        dir += (point.x() - width / 2 + 1) * horizontal + (point.y() - height / 2 + 1) * up;
-        return Ray(center, dir.normalized());
+        // Vector3f dir = camToCanvasCenter;
+        // dir += (point.x()-width/2+1) * horizontal + (point.y()-height/2+1) * up;
+        // return Ray(center, dir.normalized());
+        
+        Vector3f d_rc(point.x()-width/2+1, point.y()-height/2+1, distToCanvas);
+        d_rc.normalize();
+        Matrix3f R(horizontal, up, direction);
+        return Ray(center, R*d_rc);
     }
-
+    
 private:
-    Vector3f cameraToCanvasCenter;
+    double distToCanvas;
 };
 
 #endif //CAMERA_H

@@ -17,7 +17,7 @@ Lights {
 }
 
 Background {
-    color 0 0 0
+    color 0 0 0 
 }
 
 Materials {
@@ -31,39 +31,39 @@ Materials {
 Group {
     numObjects 2
     Group {
-        numObjects 3
+        numObjects 3   
         MaterialIndex 0
         Transform {
-            Translate  5 0 0
-            Scale  5 0.2 0.2
-            TriangleMesh {
+	    Translate  5 0 0 
+	    Scale  5 0.2 0.2 
+	    TriangleMesh {
                 obj_file mesh/cube.obj
             }
-        }
+        }    
         MaterialIndex 1
-        Transform {
-            Translate  0 5 0
-            Scale  0.2 5 0.2
-            TriangleMesh {
+	Transform {
+	    Translate  0 5 0 
+	    Scale  0.2 5 0.2 
+	    TriangleMesh {
                 obj_file mesh/cube.obj
             }
-        }
+        }    
         MaterialIndex 2
-        Transform {
-            Translate  0 0 5
-            Scale  0.2 0.2 5
-            TriangleMesh {
+	Transform {
+	    Translate  0 0 5 
+	    Scale  0.2 0.2 5 
+	    TriangleMesh {
                 obj_file mesh/cube.obj
             }
-        }
+        }    
     }
     MaterialIndex 3
     Transform {
-        Translate  4 3 1
-        XRotate  10
-        YRotate  20
-        ZRotate  30
-        Scale  2 0.5 3
+        Translate  4 3 1 
+        XRotate  10 
+	YRotate  20 
+        ZRotate  30 
+        Scale  2 0.5 3 
         TriangleMesh {
              obj_file mesh/cube.obj
         }

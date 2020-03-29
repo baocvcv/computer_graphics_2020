@@ -13,7 +13,7 @@ public:
     Ray() = delete;
     Ray(const Vector3f &orig, const Vector3f &dir) {
         origin = orig;
-        direction = dir.normalized();
+        direction = dir;
     }
 
     Ray(const Ray &r) {

@@ -26,28 +26,19 @@ int main(int argc, char *argv[]) {
     }
     string inputFile = argv[1];
     string outputFile = argv[2];  // only bmp is allowed.
-
-    // TODO: Main RayCasting Logic
-    // First, parse the scene using SceneParser.
+    
     SceneParser sp(inputFile.c_str());
-
-    // Then loop over each pixel in the image, shooting a ray
-    // through that pixel and finding its intersection with
-    // the scene.  Write the color at the intersection to that
-    // pixel in your output image.
-    Group* group = sp.getGroup();
-    Camera* cam = sp.getCamera();
+    Group *group = sp.getGroup();
+    Camera *cam = sp.getCamera();
     int width = cam->getWidth();
     int height = cam->getHeight();
-
-    int numLights = sp.getNumLights();
+    int numlights = sp.getNumLights();
     vector<Light*> lights;
-    for (int i = 0; i < numLights; i++)
-        lights.push_back(sp.getLight(i));
-
-    Image outImage(width, height);
-    Vector3f backGroundColor = sp.getBackgroundColor();
-    float tmin = 1e-6;
+    for (int i = 0; i < numlights; i++) lights.push_back(sp.getLight(i));
+    
+    Image outImg(width, height);
+    Vector3f bkgColor = sp.getBackgroundColor();
+    double tmin = 1e-6;
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
             Hit h;
@@ -60,14 +51,13 @@ int main(int argc, char *argv[]) {
                     light->getIllumination(p, dirToLight, lightColor);
                     color += h.getMaterial()->Shade(r, h, dirToLight, lightColor);
                 }
-                outImage.SetPixel(x, y, color);
-            } else {
-                outImage.SetPixel(x, y, backGroundColor);
-            }
+                outImg.SetPixel(x, y, color);
+            } else { outImg.SetPixel(x, y, bkgColor); }
         }
     }
-    outImage.SaveImage(outputFile.c_str());
+    outImg.SaveImage(outputFile.c_str());
 
-    cout << "Hello! Computer Graphics!" << endl;
+    // cout << "Hello! Computer Graphics!" << endl;
     return 0;
 }
+

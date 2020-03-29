@@ -5,8 +5,6 @@
 #include <vecmath.h>
 #include <cmath>
 
-#define ABS(x) ((x < 0) ? (-x) : (x))
-
 // TODO: Implement Plane representing an infinite plane
 // function: ax+by+cz=d
 // choose your representation , add more fields and fill in the functions
@@ -16,20 +14,20 @@ public:
     Plane(): Object3D() {}
 
     Plane(const Vector3f &normal, float d, Material *m) : Object3D(m) {
-        this->d = d / normal.length();
-        this->normal = normal.normalized();
+        this->d = d;
+        this->normal = normal;
     }
 
     ~Plane() override = default;
 
     bool intersect(const Ray &r, Hit &h, float tmin) override {
         // ray r is parallel with the plane
-        if (ABS(Vector3f::dot(r.getDirection(), normal)) < 1e-6)
+        if (abs_f(Vector3f::dot(r.getDirection(), normal)) < 1e-8)
             return false;
 
         // not parallel
         float t = Plane::solve(r, normal, d);
-        if (t < tmin || t > h.getT())
+        if (t < tmin) // too close or wrong direction
             return false;
         else {
             h.set(t, material, normal);

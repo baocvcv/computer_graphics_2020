@@ -8,7 +8,6 @@
 #include "hit.hpp"
 #include <iostream>
 
-// TODO: Implement Shade function that computes Phong introduced in class.
 class Material {
 public:
 
@@ -24,7 +23,6 @@ public:
     }
 
     // need to make sure all the vectors are normalized
-    // TODO: check if formulas are implemented correctly
     Vector3f Shade(const Ray &ray, const Hit &hit,
                    const Vector3f &dirToLight, const Vector3f &lightColor) {
         Vector3f shaded = Vector3f::ZERO;
