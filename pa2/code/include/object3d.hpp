@@ -25,6 +25,8 @@ public:
     virtual void drawGL() {
         if (material) material->Use();
     }
+    
+    inline double abs_f(double x) { return (x<0 ? -x : x);}
 
 protected:
 

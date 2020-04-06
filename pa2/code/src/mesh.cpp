@@ -10,12 +10,14 @@ bool Mesh::intersect(const Ray &r, Hit &h, float tmin) {
 
     // Optional: Change this brute force method into a faster one.
     bool result = false;
+    Hit h_tmp;
     for (int triId = 0; triId < (int) t.size(); ++triId) {
         TriangleIndex& triIndex = t[triId];
         Triangle triangle(v[triIndex[0]],
                           v[triIndex[1]], v[triIndex[2]], material);
         triangle.normal = n[triId];
-        result |= triangle.intersect(r, h, tmin);
+        result |= triangle.intersect(r, h_tmp, tmin);
+        if (h_tmp.getT() < h.getT()) h = h_tmp;
     }
     return result;
 }

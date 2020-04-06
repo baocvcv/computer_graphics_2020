@@ -28,7 +28,11 @@ public:
     bool intersect(const Ray &r, Hit &h, float tmin) override;
 
     void drawGL() override {
-        // TODO (PA2): Call drawGL for each individual triangle.
+        for (unsigned int i = 0; i < t.size(); i++) {
+            Triangle tri(v[t[i][0]], v[t[i][1]],
+                         v[t[i][2]], material);
+            tri.drawGL();
+        }
     }
 
 private:

@@ -5,23 +5,38 @@
 #include <vecmath.h>
 #include <cmath>
 
-// TODO (PA2): Copy from PA1
-
 class Plane : public Object3D {
 public:
-    Plane() {
-
-    }
+    Plane() {}
 
     Plane(const Vector3f &normal, float d, Material *m) : Object3D(m) {
-
+        this->d = d;
+        this->norm = normal;
     }
 
     ~Plane() override = default;
 
     bool intersect(const Ray &r, Hit &h, float tmin) override {
-        return false;
+        // ray r is parallel with the plane
+        if (abs_f(Vector3f::dot(r.getDirection(), norm)) < 1e-8)
+            return false;
+
+        // not parallel
+        float t = Plane::solve(r, norm, d);
+        if (t < tmin) // too close or wrong direction
+            return false;
+        else {
+            h.set(t, material, norm);
+            return true;
+        }
     }
+    
+    static float solve(const Ray &r, const Vector3f &normal, float d) {
+        float s = d - Vector3f::dot(normal, r.getOrigin());
+        float t = s / Vector3f::dot(normal, r.getDirection());
+        return t;
+    }
+
 
     void drawGL() override {
         Object3D::drawGL();

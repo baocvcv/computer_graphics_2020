@@ -9,7 +9,6 @@
 #include <iostream>
 #include <glut.h>
 
-// TODO (PA2): Copy from PA1.
 class Material {
 public:
 
@@ -28,9 +27,16 @@ public:
     Vector3f Shade(const Ray &ray, const Hit &hit,
                    const Vector3f &dirToLight, const Vector3f &lightColor) {
         Vector3f shaded = Vector3f::ZERO;
-        // 
+        float t1 = Vector3f::dot(dirToLight, hit.getNormal()); // Lx . N
+        Vector3f Rx = hit.getNormal() * 2 * t1 - dirToLight;
+        t1 = ReLU(t1);
+        float t2 = ReLU(-Vector3f::dot(ray.getDirection(), Rx));
+        t2 = pow(t2, shininess);
+        shaded = lightColor * (diffuseColor * t1 + specularColor * t2);
         return shaded;
     }
+
+    inline float ReLU(float x) { return (x > 0) ? x : .0; }
 
     // For OpenGL, this is fully implemented
     void Use() {
