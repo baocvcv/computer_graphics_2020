@@ -3,3 +3,6 @@
 debug
 build
 bin
+*.exe
+smallpt
+*~
