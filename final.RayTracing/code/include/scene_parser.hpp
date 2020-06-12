@@ -1,6 +1,7 @@
 #ifndef SCENE_PARSER_H
 #define SCENE_PARSER_H
 
+#include "group.hpp"
 #include <cassert>
 #include <vecmath.h>
 
@@ -8,12 +9,13 @@ class Camera;
 class Light;
 class Material;
 class Object3D;
-class Group;
 class Sphere;
 class Plane;
 class Triangle;
 class Transform;
 class Mesh;
+class Curve;
+class RevSurface;
 
 #define MAX_PARSER_TOKEN_LENGTH 1024
 
@@ -33,15 +35,6 @@ public:
         return background_color;
     }
 
-    int getNumLights() const {
-        return num_lights;
-    }
-
-    Light *getLight(int i) const {
-        assert(i >= 0 && i < num_lights);
-        return lights[i];
-    }
-
     int getNumMaterials() const {
         return num_materials;
     }
@@ -54,8 +47,6 @@ public:
     Group *getGroup() const {
         return group;
     }
-
-private:
 
     void parseFile();
     void parsePerspectiveCamera();
@@ -72,6 +63,9 @@ private:
     Triangle *parseTriangle();
     Mesh *parseTriangleMesh();
     Transform *parseTransform();
+    Curve *parseBezierCurve();
+    Curve *parseBsplineCurve();
+    RevSurface *parseRevSurface();
 
     int getToken(char token[MAX_PARSER_TOKEN_LENGTH]);
 
@@ -82,13 +76,13 @@ private:
 
     FILE *file;
     Camera *camera;
-    Vector3f background_color;
-    int num_lights;
-    Light **lights;
+    Group lights;
     int num_materials;
     Material **materials;
     Material *current_material;
     Group *group;
+
+    Vector3f background_color;
 };
 
 #endif // SCENE_PARSER_H

@@ -6,3 +6,5 @@ bin
 *.exe
 smallpt
 *~
+minilight-cpp-master
+*.ppm

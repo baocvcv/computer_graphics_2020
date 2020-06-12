@@ -1,25 +1,21 @@
 #ifndef GROUP_H
 #define GROUP_H
 
-
 #include "object3d.hpp"
-#include "ray.hpp"
-#include "hit.hpp"
+#include "helpers.hpp"
+
 #include <iostream>
 #include <vector>
 
-
 class Group : public Object3D {
-
 public:
+    std::vector<Object3D*> objects;
 
     Group() {}
 
-    explicit Group (int num_objects): object_num(num_objects) {}
-
     ~Group() override {
         for (auto obj: objects) {
-            delete obj;
+            // delete obj;
         }
     }
 
@@ -29,7 +25,7 @@ public:
         bool hasIntersect = false;
         Hit h_tmp;
         for (auto obj: objects) {
-            if (obj->intersect(r, h_tmp, tmin) && h_tmp.getT() < h.getT()) {
+            if (obj->intersect(r, h_tmp, tmin) && h_tmp.t < h.t) {
                 h = h_tmp;
                 hasIntersect = true;
             }
@@ -37,17 +33,9 @@ public:
         return hasIntersect;
     }
 
-    void addObject(int index, Object3D *obj) {
-        objects.push_back(obj);
-    }
+    void addObject(Object3D *obj) { objects.push_back(obj); }
 
-    int getGroupSize() {
-        return object_num;
-    }
-
-private:
-    std::vector<Object3D*> objects;
-    int object_num;
+   int getGroupSize() { return objects.size(); }
 };
 
 #endif

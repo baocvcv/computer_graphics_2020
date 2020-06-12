@@ -1,14 +1,27 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "ray.hpp"
+#include "helpers.hpp"
+#include "light.hpp"
+#include "image.hpp"
+#include "group.hpp"
+#include "scene_parser.hpp"
+
 #include <vecmath.h>
 #include <float.h>
 #include <cmath>
 
-
 class Camera {
 public:
+    // Extrinsic parameters
+    Vector3f center;
+    Vector3f direction;
+    Vector3f up;
+    Vector3f horizontal;
+    // Intrinsic parameters
+    int width;
+    int height;
+
     Camera(const Vector3f &center, const Vector3f &direction, const Vector3f &up, int imgW, int imgH) {
         this->center = center;
         this->direction = direction.normalized();
@@ -20,27 +33,16 @@ public:
 
     // Generate rays for each screen-space coordinate
     virtual Ray generateRay(const Vector2f &point) = 0;
+    virtual void renderFrame(const SceneParser& sp, Image& outImg, int n_samples) = 0;
     virtual ~Camera() = default;
-
-    int getWidth() const { return width; }
-    int getHeight() const { return height; }
-
-protected:
-    // Extrinsic parameters
-    Vector3f center;
-    Vector3f direction;
-    Vector3f up;
-    Vector3f horizontal;
-    // Intrinsic parameters
-    int width;
-    int height;
 };
 
 // TODO: Implement Perspective camera
 // You can add new functions or variables whenever needed.
 class PerspectiveCamera : public Camera {
-
 public:
+    double distToCanvas;
+
     PerspectiveCamera(const Vector3f &center, const Vector3f &direction,
             const Vector3f &up, int imgW, int imgH, float angle) : Camera(center, direction, up, imgW, imgH) {
         // angle is in radian.
@@ -53,9 +55,8 @@ public:
         Matrix3f R(horizontal, up, direction);
         return Ray(center, R*d_rc);
     }
-    
-private:
-    double distToCanvas;
+
+    void renderFrame(const SceneParser& sp, Image& outImg, int n_samples);
 };
 
 #endif //CAMERA_H

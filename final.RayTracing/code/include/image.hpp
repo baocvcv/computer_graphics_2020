@@ -9,6 +9,8 @@ class Image {
 
 public:
 
+    Image() : width(0), height(0), data(nullptr) {}
+
     Image(int w, int h) {
         width = w;
         height = h;
@@ -17,6 +19,15 @@ public:
 
     ~Image() {
         delete[] data;
+    }
+
+    void SetSize(int w, int h) {
+        assert(w > 0 && h > 0);
+        if (data == nullptr)
+            delete[] data;
+        width = w;
+        height = h;
+        data = new Vector3f[width * height];
     }
 
     int Width() const {
@@ -43,6 +54,12 @@ public:
         assert(x >= 0 && x < width);
         assert(y >= 0 && y < height);
         data[y * width + x] = color;
+    }
+
+    void IncrementPixel(int x, int y, const Vector3f &color) {
+        assert(x >= 0 && x < width);
+        assert(y >= 0 && y < height);
+        data[y * width + x] += color;
     }
 
     static Image *LoadPPM(const char *filename);

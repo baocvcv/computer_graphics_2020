@@ -2,20 +2,24 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <vector>
 
 #include "scene_parser.hpp"
 #include "camera.hpp"
 #include "light.hpp"
-#include "material.hpp"
 #include "object3d.hpp"
+#include "helpers.hpp"
 #include "group.hpp"
 #include "mesh.hpp"
-#include "sphere.hpp"
-#include "plane.hpp"
-#include "triangle.hpp"
-#include "transform.hpp"
+#include "revsurface.hpp"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #define DegreesToRadians(x) ((M_PI * x) / 180.0f)
+
+using namespace std;
 
 SceneParser::SceneParser(const char *filename) {
 
@@ -23,8 +27,6 @@ SceneParser::SceneParser(const char *filename) {
     group = nullptr;
     camera = nullptr;
     background_color = Vector3f(0.5, 0.5, 0.5);
-    num_lights = 0;
-    lights = nullptr;
     num_materials = 0;
     materials = nullptr;
     current_material = nullptr;
@@ -47,7 +49,7 @@ SceneParser::SceneParser(const char *filename) {
     fclose(file);
     file = nullptr;
 
-    if (num_lights == 0) {
+    if (lights.getGroupSize() == 0) {
         printf("WARNING:    No lights specified\n");
     }
 }
@@ -62,10 +64,6 @@ SceneParser::~SceneParser() {
         delete materials[i];
     }
     delete[] materials;
-    for (i = 0; i < num_lights; i++) {
-        delete lights[i];
-    }
-    delete[] lights;
 }
 
 // ====================================================================
@@ -83,8 +81,6 @@ void SceneParser::parseFile() {
             parsePerspectiveCamera();
         } else if (!strcmp(token, "Background")) {
             parseBackground();
-        } else if (!strcmp(token, "Lights")) {
-            parseLights();
         } else if (!strcmp(token, "Materials")) {
             parseMaterials();
         } else if (!strcmp(token, "Group")) {
@@ -94,6 +90,7 @@ void SceneParser::parseFile() {
             exit(0);
         }
     }
+    parseLights();
 }
 
 // ====================================================================
@@ -150,30 +147,35 @@ void SceneParser::parseBackground() {
 // ====================================================================
 
 void SceneParser::parseLights() {
-    char token[MAX_PARSER_TOKEN_LENGTH];
-    getToken(token);
-    assert (!strcmp(token, "{"));
-    // read in the number of objects
-    getToken(token);
-    assert (!strcmp(token, "numLights"));
-    num_lights = readInt();
-    lights = new Light *[num_lights];
-    // read in the objects
-    int count = 0;
-    while (num_lights > count) {
-        getToken(token);
-        if (strcmp(token, "DirectionalLight") == 0) {
-            lights[count] = parseDirectionalLight();
-        } else if (strcmp(token, "PointLight") == 0) {
-            lights[count] = parsePointLight();
-        } else {
-            printf("Unknown token in parseLight: '%s'\n", token);
-            exit(0);
+    // char token[MAX_PARSER_TOKEN_LENGTH];
+    // getToken(token);
+    // assert (!strcmp(token, "{"));
+    // // read in the number of objects
+    // getToken(token);
+    // assert (!strcmp(token, "numLights"));
+    // num_lights = readInt();
+    // lights = new Light *[num_lights];
+    // // read in the objects
+    // int count = 0;
+    // while (num_lights > count) {
+    //     getToken(token);
+    //     if (strcmp(token, "DirectionalLight") == 0) {
+    //         lights[count] = parseDirectionalLight();
+    //     } else if (strcmp(token, "PointLight") == 0) {
+    //         lights[count] = parsePointLight();
+    //     } else {
+    //         printf("Unknown token in parseLight: '%s'\n", token);
+    //         exit(0);
+    //     }
+    //     count++;
+    // }
+    // getToken(token);
+    // assert (!strcmp(token, "}"));
+    for (auto obj : group->objects) {
+        if (obj->material->emission != Vector3f::ZERO) {
+            lights.addObject(obj);
         }
-        count++;
     }
-    getToken(token);
-    assert (!strcmp(token, "}"));
 }
 
 Light *SceneParser::parseDirectionalLight() {
@@ -239,27 +241,34 @@ Material *SceneParser::parseMaterial() {
     char token[MAX_PARSER_TOKEN_LENGTH];
     char filename[MAX_PARSER_TOKEN_LENGTH];
     filename[0] = 0;
-    Vector3f diffuseColor(1, 1, 1), specularColor(0, 0, 0);
-    float shininess = 0;
+    Vector3f color(0, 0, 0), emission(0, 0, 0);
+    float n = 1.0;
+    Material::MaterialType type = Material::MaterialType::DIFFUSE;
     getToken(token);
     assert (!strcmp(token, "{"));
     while (true) {
         getToken(token);
-        if (strcmp(token, "diffuseColor") == 0) {
-            diffuseColor = readVector3f();
-        } else if (strcmp(token, "specularColor") == 0) {
-            specularColor = readVector3f();
-        } else if (strcmp(token, "shininess") == 0) {
-            shininess = readFloat();
+        if (strcmp(token, "Color") == 0) {
+            color = readVector3f();
+        } else if (strcmp(token, "Emission") == 0) {
+            emission = readVector3f();
+        } else if (strcmp(token, "Type") == 0) {
+            getToken(token);
+            if (strcmp(token, "specular") == 0)
+                type = Material::MaterialType::SPECULAR;
+            else if (strcmp(token, "refract") == 0)
+                type = Material::MaterialType::REFRACT;
+        } else if (strcmp(token, "n") == 0) {
+            n = readFloat();
         } else if (strcmp(token, "texture") == 0) {
-            // Optional: read in texture and draw it.
+            // TODO: read in texture
             getToken(filename);
         } else {
             assert (!strcmp(token, "}"));
             break;
         }
     }
-    auto *answer = new Material(diffuseColor, specularColor, shininess);
+    auto *answer = new Material(type, color, emission, n, filename);
     return answer;
 }
 
@@ -280,6 +289,12 @@ Object3D *SceneParser::parseObject(char token[MAX_PARSER_TOKEN_LENGTH]) {
         answer = (Object3D *) parseTriangleMesh();
     } else if (!strcmp(token, "Transform")) {
         answer = (Object3D *) parseTransform();
+    } else if (!strcmp(token, "BezierCurve")) {
+        answer = (Object3D *) parseBezierCurve();
+    } else if (!strcmp(token, "BsplineCurve")) {
+        answer = (Object3D *) parseBsplineCurve();
+    } else if (!strcmp(token, "RevSurface")) {
+        answer = (Object3D *) parseRevSurface();
     } else {
         printf("Unknown token in parseObject: '%s'\n", token);
         exit(0);
@@ -308,7 +323,7 @@ Group *SceneParser::parseGroup() {
     assert (!strcmp(token, "numObjects"));
     int num_objects = readInt();
 
-    auto *answer = new Group(num_objects);
+    auto *answer = new Group();
 
     // read in the objects
     int count = 0;
@@ -322,8 +337,7 @@ Group *SceneParser::parseGroup() {
         } else {
             Object3D *object = parseObject(token);
             assert (object != nullptr);
-            answer->addObject(count, object);
-
+            answer->addObject(object);
             count++;
         }
     }
@@ -408,6 +422,76 @@ Mesh *SceneParser::parseTriangleMesh() {
     return answer;
 }
 
+Curve *SceneParser::parseBezierCurve() {
+    char token[MAX_PARSER_TOKEN_LENGTH];
+    getToken(token);
+    assert (!strcmp(token, "{"));
+    getToken(token);
+    assert (!strcmp(token, "controls"));
+    vector<Vector3f> controls;
+    while (true) {
+        getToken(token);
+        if (!strcmp(token, "[")) {
+            controls.push_back(readVector3f());
+            getToken(token);
+            assert (!strcmp(token, "]"));
+        } else if (!strcmp(token, "}")) {
+            break;
+        } else {
+            printf("Incorrect format for BezierCurve!\n");
+            exit(0);
+        }
+    }
+    Curve *answer = new BezierCurve(controls);
+    return answer;
+}
+
+
+Curve *SceneParser::parseBsplineCurve() {
+    char token[MAX_PARSER_TOKEN_LENGTH];
+    getToken(token);
+    assert (!strcmp(token, "{"));
+    getToken(token);
+    assert (!strcmp(token, "controls"));
+    vector<Vector3f> controls;
+    while (true) {
+        getToken(token);
+        if (!strcmp(token, "[")) {
+            controls.push_back(readVector3f());
+            getToken(token);
+            assert (!strcmp(token, "]"));
+        } else if (!strcmp(token, "}")) {
+            break;
+        } else {
+            printf("Incorrect format for BsplineCurve!\n");
+            exit(0);
+        }
+    }
+    Curve *answer = new BsplineCurve(controls);
+    return answer;
+}
+
+RevSurface *SceneParser::parseRevSurface() {
+    char token[MAX_PARSER_TOKEN_LENGTH];
+    getToken(token);
+    assert (!strcmp(token, "{"));
+    getToken(token);
+    assert (!strcmp(token, "profile"));
+    Curve* profile;
+    getToken(token);
+    if (!strcmp(token, "BezierCurve")) {
+        profile = parseBezierCurve();
+    } else if (!strcmp(token, "BsplineCurve")) {
+        profile = parseBsplineCurve();
+    } else {
+        printf("Unknown profile type in parseRevSurface: '%s'\n", token);
+        exit(0);
+    }
+    getToken(token);
+    assert (!strcmp(token, "}"));
+    auto *answer = new RevSurface(profile, current_material);
+    return answer;
+}
 
 Transform *SceneParser::parseTransform() {
     char token[MAX_PARSER_TOKEN_LENGTH];

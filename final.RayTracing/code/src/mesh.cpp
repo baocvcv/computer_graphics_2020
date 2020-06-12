@@ -17,7 +17,7 @@ bool Mesh::intersect(const Ray &r, Hit &h, float tmin) {
                           v[triIndex[1]], v[triIndex[2]], material);
         triangle.normal = n[triId];
         result |= triangle.intersect(r, h_tmp, tmin);
-        if (h_tmp.getT() < h.getT()) h = h_tmp;
+        if (h_tmp.t < h.t) h = h_tmp;
     }
     return result;
 }
