@@ -23,10 +23,6 @@ public:
 
     Ray(const Ray &r) { origin = r.origin, dir = r.dir; }
 
-    const Vector3f &getOrigin() const { return origin; }
-
-    const Vector3f &getDirection() const { return dir; }
-
     Vector3f pointAtParameter(float t) const { return origin + dir * t; }
 };
 
@@ -41,22 +37,25 @@ public:
     float t;
     Material *material;
     Vector3f normal;
+    Vector2f uv;
 
     Hit() : material(nullptr), t(1e38) {}
 
-    Hit(float _t, Material *m, const Vector3f &n, bool _inside=false) :
-        t(_t), material(m), normal(n) {}
+    Hit(float _t, Material *m, const Vector3f &n, const Vector2f &uv_ = Vector2f::ZERO) :
+        t(_t), material(m), normal(n), uv(uv_) {}
 
     Hit(const Hit &h) {
         t = h.t;
         material = h.material;
         normal = h.normal;
+        uv = h.uv
     }
 
-    void set(float _t, Material *_m, const Vector3f &n) {
+    void set(float _t, Material *_m, const Vector3f &n, const Vector2f &uv_ = Vector2f::ZERO) {
         t = _t;
         material = _m;
         normal = n;
+        uv = uv_;
     }
 };
 
@@ -76,15 +75,26 @@ public:
     Vector3f color;
     Vector3f emission;
     float n_material; // refraction index
+
+    bool has_texture;
     std::string texture_file;
 
-    explicit Material(
+    Material(
         MaterialType type_,
         const Vector3f &color_ = Vector3f::ZERO,
         const Vector3f &emission_ = Vector3f::ZERO,
-        float n = 1.,
-        const std::string& texture = "") :
-            type(type_), color(color_), emission(emission_), n_material(n), texture_file(texture) {}
+        float n = 1.) :
+            type(type_), color(color_), emission(emission_), n_material(n),
+            has_texture(false) {}
+
+    Material(
+        MaterialType type_,
+        const std::string& texture,
+        const Vector3f &color_ = Vector3f::ZERO,
+        const Vector3f &emission_ = Vector3f::ZERO,
+        float n = 1.) :
+            type(type_), color(color_), emission(emission_), n_material(n),
+            has_texture(true),texture_file(texture) {}
 
     virtual ~Material() = default;
 
@@ -122,7 +132,7 @@ public:
 
     Ray specularRay(const Ray &ray, const Hit &hit) {
         Vector3f x = ray.pointAtParameter(hit.t);
-        Vector3f n = hit.normal, rd = ray.getDirection();
+        Vector3f n = hit.normal, rd = ray.dir;
         Vector3f d = rd - n * 2 * Vector3f::dot(n, rd);
         return Ray(x, d);
     }

@@ -33,6 +33,8 @@ SET(FINAL_INCLUDES
         include/object3d.hpp
         include/revsurface.hpp
         include/scene_parser.hpp
+        include/json.hpp
+        include/args.hxx
         )
 
 SET(CMAKE_CXX_STANDARD 14)

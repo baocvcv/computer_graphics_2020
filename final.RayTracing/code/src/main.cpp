@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     }
     string inputFile = argv[1];
     string outputFile = argv[2];  // only bmp is allowed.
-    
+
     SceneParser sp(inputFile.c_str());
     // Group *group = sp.getGroup();
     Camera *cam = sp.getCamera();
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     // int numlights = sp.getNumLights();
     // vector<Light*> lights;
     // for (int i = 0; i < numlights; i++) lights.push_back(sp.getLight(i));
-    
+
     // TODO: put this function in Camera?
     // TODO: allow selection of different algorithms
     Image outImg;
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     //     }
     // }
 
-    cam->renderFrame(sp, outImg, 100);
+    cam->renderFrame(sp, outImg, 400);
     outImg.SaveImage(outputFile.c_str());
 
     // cout << "Hello! Computer Graphics!" << endl;

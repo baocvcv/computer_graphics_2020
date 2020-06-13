@@ -376,12 +376,12 @@ Plane *SceneParser::parsePlane() {
     assert (!strcmp(token, "normal"));
     Vector3f normal = readVector3f();
     getToken(token);
-    assert (!strcmp(token, "offset"));
-    float offset = readFloat();
+    assert (!strcmp(token, "point"));
+    Vector3f p = readVector3f();
     getToken(token);
     assert (!strcmp(token, "}"));
     assert (current_material != nullptr);
-    return new Plane(normal, offset, current_material);
+    return new Plane(normal, p, current_material);
 }
 
 

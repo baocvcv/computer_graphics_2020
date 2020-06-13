@@ -27,36 +27,36 @@ public:
 // function: ax+by+cz=d
 class Plane : public Object3D {
 public:
+    Vector3f p;
     Vector3f normal;
     float d;
 
     Plane(): Object3D() {}
 
-    Plane(const Vector3f &normal_, float d_, Material *m) : Object3D(m), normal(normal_), d(d_) {}
+    Plane(const Vector3f &normal_, const Vector3f &p_, Material *m) :
+        Object3D(m), p(p_), normal(normal_) {
+            d = Vector3f::dot(normal_, p_);
+        }
 
     ~Plane() override = default;
 
     bool intersect(const Ray &r, Hit &h, float tmin) override {
         // ray r is parallel with the plane
-        if (abs_f(Vector3f::dot(r.getDirection(), normal)) < 1e-8)
+        if (abs_f(Vector3f::dot(r.dir, normal)) < 1e-8)
             return false;
 
         // not parallel
-        float t = Plane::solve(r, normal, d);
-        if (t < tmin) // too close or wrong direction
-            return false;
-        else {
-            // if (Vector3f::dot(normal, r.getDirection()) > 0)
-            //     h.set(t, material, -normal);
-            // else
+        float t = solve(r);
+        if (t > tmin) {
             h.set(t, material, normal);
             return true;
         }
+        return false;
     }
 
-    static float solve(const Ray &r, const Vector3f &normal, float d) {
-        float s = d - Vector3f::dot(normal, r.getOrigin());
-        float t = s / Vector3f::dot(normal, r.getDirection());
+    float solve(const Ray &r) {
+        float s = d - Vector3f::dot(normal, r.origin);
+        float t = s / Vector3f::dot(normal, r.dir);
         return t;
     }
 };
@@ -76,8 +76,8 @@ public:
 
     bool intersect(const Ray &r, Hit &h, float tmin) override {
         // Calc dist from center to ray r
-        Vector3f originToCent = center - r.getOrigin();
-        double d1 = abs_f(Vector3f::dot(r.getDirection().normalized(), originToCent));
+        Vector3f originToCent = center - r.origin;
+        double d1 = abs_f(Vector3f::dot(r.dir.normalized(), originToCent));
         double d2 = originToCent.squaredLength() - d1 * d1; // center to ray r
         // Cals intersection
         double interHalfLen = sqrt(radius*radius - d2);
@@ -114,8 +114,8 @@ public:
     ~Transform() {}
 
     virtual bool intersect(const Ray &r, Hit &h, float tmin) {
-        Vector3f trSource = transformPoint(transform, r.getOrigin());
-        Vector3f trDirection = transformDirection(transform, r.getDirection());
+        Vector3f trSource = transformPoint(transform, r.origin);
+        Vector3f trDirection = transformDirection(transform, r.dir);
         Ray tr(trSource, trDirection);
         bool inter = o->intersect(tr, h, tmin);
         if (inter) {
@@ -126,23 +126,19 @@ public:
 };
 
 
-class Triangle: public Object3D {
+class Triangle: public Plane {
 public:
-	Vector3f normal;
 	Vector3f vertices[3];
 
 	Triangle() = delete;
 
     // a b c are three vertex positions of the triangle
 	Triangle( const Vector3f& a, const Vector3f& b, const Vector3f& c, Material* m) :
-		Object3D(m), vertices{a, b, c} {
-			normal = Vector3f::cross(b-a, c-a).normalized();
-		}
+        Plane(Vector3f::cross(b-a, c-a).normalized(), a, m), vertices{a, b, c} {}
 
 	bool intersect( const Ray& ray,  Hit& hit , float tmin) override {
 		// solve the intersection between ray and the triangle plane
-		float d = Vector3f::dot(normal, vertices[0]);
-		float t = Plane::solve(ray, normal, d);
+		float t = solve(ray);
 		Vector3f p = ray.pointAtParameter(t); // the intersection point
 
 		// determin if is inside the triangle
@@ -165,5 +161,61 @@ public:
 	inline bool good(double x) { return (0 <= x && x <= 1); }
 };
 
+class Rectangle: public Plane {
+public:
+    Vector3f u, v;
+    float u_len_inv, v_len_inv;
+
+    Rectangle() {}
+
+    Rectangle(Vector3f p_, Vector3f u_, Vector3f v_, Material *m) :
+        Plane(Vector3f::cross(u_, v_), p_, m), u(u_.normalized()),
+        v(v_.normalized()), u_len_inv(1./u_.length()),
+        v_len_inv(1./v_.length()) {}
+    
+    bool intersect(const Ray& r, Hit& h, float tmin) override {
+        float t = solve(r);
+        Vector3f p_to_x = r.pointAtParameter(t) - p; // p -> point of intersection
+        double du = Vector3f::dot(p_to_x, u);
+        double dv = Vector3f::dot(p_to_x, v);
+        if (tmin < du && du < 1-tmin && tmin < dv && dv < 1-tmin) {
+            h.set(t, material, normal);
+            return true;
+        }
+        return false;
+    }
+
+};
+
+class Circle: public Plane {
+public:
+    float r;
+    Vector3f u, v;
+
+    Circle(Vector3f c, float r_, Vector3f n, Material *m): Plane(n, c, m), r(r_) {
+        if (n.x() < 1.0) {
+            u.x() = n.z();
+            u.y() = 0.;
+            u.z() = -n.x();
+        } else {
+            u.x() = 0.;
+            u.y() = -n.z();
+            u.z() = n.y();
+        }
+        u = u.normalized() * r;
+        v = Vector3f::cross(n, u).normalized() * r;
+    }
+
+    bool intersect(const Ray& ray, Hit& h, float tmin) override {
+        float t = solve(ray);
+        Vector3f x = ray.pointAtParameter(t);
+        double dist = (x - p).length();
+        if (t > tmin && dist < r) {
+            h.set(t, material, normal);
+            return true;
+        }
+        return false;
+    }
+};
 #endif
 
