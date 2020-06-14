@@ -5,13 +5,6 @@
 #include <vector>
 
 #include "scene_parser.hpp"
-#include "camera.hpp"
-#include "light.hpp"
-#include "object3d.hpp"
-#include "helpers.hpp"
-#include "group.hpp"
-#include "mesh.hpp"
-#include "revsurface.hpp"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -26,7 +19,7 @@ SceneParser::SceneParser(const char *filename) {
     // initialize some reasonable default values
     group = nullptr;
     camera = nullptr;
-    background_color = Vector3f(0.5, 0.5, 0.5);
+    background_color = Vec3(0.5, 0.5, 0.5);
     num_materials = 0;
     materials = nullptr;
     current_material = nullptr;
@@ -103,13 +96,13 @@ void SceneParser::parsePerspectiveCamera() {
     assert (!strcmp(token, "{"));
     getToken(token);
     assert (!strcmp(token, "center"));
-    Vector3f center = readVector3f();
+    Vec3 center = readVector3f();
     getToken(token);
     assert (!strcmp(token, "direction"));
-    Vector3f direction = readVector3f();
+    Vec3 direction = readVector3f();
     getToken(token);
     assert (!strcmp(token, "up"));
-    Vector3f up = readVector3f();
+    Vec3 up = readVector3f();
     getToken(token);
     assert (!strcmp(token, "angle"));
     float angle_degrees = readFloat();
@@ -172,7 +165,7 @@ void SceneParser::parseLights() {
     // getToken(token);
     // assert (!strcmp(token, "}"));
     for (auto obj : group->objects) {
-        if (obj->material->emission != Vector3f::ZERO) {
+        if (obj->material->emission.non_zero()) {
             lights.addObject(obj);
         }
     }
@@ -184,10 +177,10 @@ Light *SceneParser::parseDirectionalLight() {
     assert (!strcmp(token, "{"));
     getToken(token);
     assert (!strcmp(token, "direction"));
-    Vector3f direction = readVector3f();
+    Vec3 direction = readVector3f();
     getToken(token);
     assert (!strcmp(token, "color"));
-    Vector3f color = readVector3f();
+    Vec3 color = readVector3f();
     getToken(token);
     assert (!strcmp(token, "}"));
     return new DirectionalLight(direction, color);
@@ -199,10 +192,10 @@ Light *SceneParser::parsePointLight() {
     assert (!strcmp(token, "{"));
     getToken(token);
     assert (!strcmp(token, "position"));
-    Vector3f position = readVector3f();
+    Vec3 position = readVector3f();
     getToken(token);
     assert (!strcmp(token, "color"));
-    Vector3f color = readVector3f();
+    Vec3 color = readVector3f();
     getToken(token);
     assert (!strcmp(token, "}"));
     return new PointLight(position, color);
@@ -241,9 +234,9 @@ Material *SceneParser::parseMaterial() {
     char token[MAX_PARSER_TOKEN_LENGTH];
     char filename[MAX_PARSER_TOKEN_LENGTH];
     filename[0] = 0;
-    Vector3f color(0, 0, 0), emission(0, 0, 0);
+    Vec3 color(0, 0, 0), emission(0, 0, 0);
     float n = 1.0;
-    Material::MaterialType type = Material::MaterialType::DIFFUSE;
+    MaterialType type = MaterialType::DIFFUSE;
     getToken(token);
     assert (!strcmp(token, "{"));
     while (true) {
@@ -255,9 +248,9 @@ Material *SceneParser::parseMaterial() {
         } else if (strcmp(token, "Type") == 0) {
             getToken(token);
             if (strcmp(token, "specular") == 0)
-                type = Material::MaterialType::SPECULAR;
+                type = MaterialType::SPECULAR;
             else if (strcmp(token, "refract") == 0)
-                type = Material::MaterialType::REFRACT;
+                type = MaterialType::REFRACTIVE;
         } else if (strcmp(token, "n") == 0) {
             n = readFloat();
         } else if (strcmp(token, "texture") == 0) {
@@ -357,7 +350,7 @@ Sphere *SceneParser::parseSphere() {
     assert (!strcmp(token, "{"));
     getToken(token);
     assert (!strcmp(token, "center"));
-    Vector3f center = readVector3f();
+    Vec3 center = readVector3f();
     getToken(token);
     assert (!strcmp(token, "radius"));
     float radius = readFloat();
@@ -374,10 +367,10 @@ Plane *SceneParser::parsePlane() {
     assert (!strcmp(token, "{"));
     getToken(token);
     assert (!strcmp(token, "normal"));
-    Vector3f normal = readVector3f();
+    Vec3 normal = readVector3f();
     getToken(token);
     assert (!strcmp(token, "point"));
-    Vector3f p = readVector3f();
+    Vec3 p = readVector3f();
     getToken(token);
     assert (!strcmp(token, "}"));
     assert (current_material != nullptr);
@@ -391,13 +384,13 @@ Triangle *SceneParser::parseTriangle() {
     assert (!strcmp(token, "{"));
     getToken(token);
     assert (!strcmp(token, "vertex0"));
-    Vector3f v0 = readVector3f();
+    Vec3 v0 = readVector3f();
     getToken(token);
     assert (!strcmp(token, "vertex1"));
-    Vector3f v1 = readVector3f();
+    Vec3 v1 = readVector3f();
     getToken(token);
     assert (!strcmp(token, "vertex2"));
-    Vector3f v2 = readVector3f();
+    Vec3 v2 = readVector3f();
     getToken(token);
     assert (!strcmp(token, "}"));
     assert (current_material != nullptr);
@@ -428,7 +421,7 @@ Curve *SceneParser::parseBezierCurve() {
     assert (!strcmp(token, "{"));
     getToken(token);
     assert (!strcmp(token, "controls"));
-    vector<Vector3f> controls;
+    vector<Vec3> controls;
     while (true) {
         getToken(token);
         if (!strcmp(token, "[")) {
@@ -453,7 +446,7 @@ Curve *SceneParser::parseBsplineCurve() {
     assert (!strcmp(token, "{"));
     getToken(token);
     assert (!strcmp(token, "controls"));
-    vector<Vector3f> controls;
+    vector<Vec3> controls;
     while (true) {
         getToken(token);
         if (!strcmp(token, "[")) {
@@ -495,7 +488,7 @@ RevSurface *SceneParser::parseRevSurface() {
 
 Transform *SceneParser::parseTransform() {
     char token[MAX_PARSER_TOKEN_LENGTH];
-    Matrix4f matrix = Matrix4f::identity();
+    Mat44 matrix = Mat44::identity();
     Object3D *object = nullptr;
     getToken(token);
     assert (!strcmp(token, "{"));
@@ -506,36 +499,28 @@ Transform *SceneParser::parseTransform() {
 
     while (true) {
         if (!strcmp(token, "Scale")) {
-            Vector3f s = readVector3f();
-            matrix = matrix * Matrix4f::scaling(s[0], s[1], s[2]);
+            Vec3 s = readVector3f();
+            matrix = matrix * Mat44::scaling(s.x, s.y, s.z);
         } else if (!strcmp(token, "UniformScale")) {
             float s = readFloat();
-            matrix = matrix * Matrix4f::uniformScaling(s);
+            matrix = matrix * Mat44::scaling(s, s, s);
         } else if (!strcmp(token, "Translate")) {
-            matrix = matrix * Matrix4f::translation(readVector3f());
+            auto v = readVector3f();
+            matrix = matrix * Mat44::translation(v.x, v.y, v.z);
         } else if (!strcmp(token, "XRotate")) {
-            matrix = matrix * Matrix4f::rotateX(DegreesToRadians(readFloat()));
+            matrix = matrix * Mat44::rot_x(DegreesToRadians(readFloat()));
         } else if (!strcmp(token, "YRotate")) {
-            matrix = matrix * Matrix4f::rotateY(DegreesToRadians(readFloat()));
+            matrix = matrix * Mat44::rot_y(DegreesToRadians(readFloat()));
         } else if (!strcmp(token, "ZRotate")) {
-            matrix = matrix * Matrix4f::rotateZ(DegreesToRadians(readFloat()));
-        } else if (!strcmp(token, "Rotate")) {
-            getToken(token);
-            assert (!strcmp(token, "{"));
-            Vector3f axis = readVector3f();
-            float degrees = readFloat();
-            float radians = DegreesToRadians(degrees);
-            matrix = matrix * Matrix4f::rotation(axis, radians);
-            getToken(token);
-            assert (!strcmp(token, "}"));
+            matrix = matrix * Mat44::rot_z(DegreesToRadians(readFloat()));
         } else if (!strcmp(token, "Matrix4f")) {
-            Matrix4f matrix2 = Matrix4f::identity();
+            Mat44 matrix2 = Mat44::identity();
             getToken(token);
             assert (!strcmp(token, "{"));
             for (int j = 0; j < 4; j++) {
                 for (int i = 0; i < 4; i++) {
                     float v = readFloat();
-                    matrix2(i, j) = v;
+                    matrix2[j*4 + i] = v;
                 }
             }
             getToken(token);
@@ -571,14 +556,14 @@ int SceneParser::getToken(char token[MAX_PARSER_TOKEN_LENGTH]) {
 }
 
 
-Vector3f SceneParser::readVector3f() {
+Vec3 SceneParser::readVector3f() {
     float x, y, z;
     int count = fscanf(file, "%f %f %f", &x, &y, &z);
     if (count != 3) {
         printf("Error trying to read 3 floats to make a Vector3f\n");
         assert (0);
     }
-    return Vector3f(x, y, z);
+    return Vec3(x, y, z);
 }
 
 

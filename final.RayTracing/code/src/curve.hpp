@@ -1,13 +1,8 @@
 #ifndef CURVE_HPP
 #define CURVE_HPP
 
+#include "common.hpp"
 #include "object3d.hpp"
-#include <vecmath.h>
-#include <vector>
-#include <utility>
-#include <cstdio>
-
-#include <algorithm>
 
 // TODO (PA3): Implement Bernstein class to compute spline basis function.
 //       You may refer to the python-script for implementation.
@@ -115,24 +110,24 @@ private:
 // after it has been tesselated: the vertex (V) and the tangent (T)
 // It is the responsiblility of functions that create these objects to fill in all the data.
 struct CurvePoint {
-    Vector3f V; // Vertex
-    Vector3f T; // Tangent  (unit)
+    Vec3 V; // Vertex
+    Vec3 T; // Tangent  (unit)
 
-    CurvePoint(const Vector3f& _V, const Vector3f& _T) :
+    CurvePoint(const Vec3& _V, const Vec3& _T) :
         V(_V), T(_T) {}
 };
 
 class Curve : public Object3D {
 protected:
-    std::vector<Vector3f> controls;
+    std::vector<Vec3> controls;
 public:
-    explicit Curve(std::vector<Vector3f> points) : controls(std::move(points)) {}
+    explicit Curve(std::vector<Vec3> points) : controls(std::move(points)) {}
 
     bool intersect(const Ray &r, Hit &h, float tmin) override {
         return false;
     }
 
-    std::vector<Vector3f> &getControls() {
+    std::vector<Vec3> &getControls() {
         return controls;
     }
 
@@ -162,7 +157,7 @@ public:
 
 class BezierCurve : public Curve {
 public:
-    explicit BezierCurve(const std::vector<Vector3f> &points) : Curve(points) {
+    explicit BezierCurve(const std::vector<Vec3> &points) : Curve(points) {
         if (points.size() < 4 || points.size() % 3 != 1) {
             printf("Number of control points of BezierCurve must be 3n+1!\n");
             exit(0);
@@ -185,8 +180,8 @@ public:
         for (auto ti : t) {
             auto basis = bern.evaluate(ti);
             int len = basis.second.size();
-            auto vertex = Vector3f::ZERO;
-            auto tangent = Vector3f::ZERO;
+            auto vertex = Vec3();
+            auto tangent = Vec3();
             for (int i = 0; i < len; i++) {
                 int ii = i + basis.first;
                 vertex += controls[ii] * basis.second[i].first;
@@ -202,7 +197,7 @@ protected:
 
 class BsplineCurve : public Curve {
 public:
-    BsplineCurve(const std::vector<Vector3f> &points) : Curve(points) {
+    BsplineCurve(const std::vector<Vec3> &points) : Curve(points) {
         if (points.size() < 4) {
             printf("Number of control points of BspineCurve must be more than 4!\n");
             exit(0);
@@ -225,8 +220,8 @@ public:
             for (auto ti = knots[i]; ti < knots[i+1]; ti += step) {
                 auto basis = bern.evaluate(ti);
                 int len = basis.second.size();
-                auto vertex = Vector3f::ZERO;
-                auto tangent = Vector3f::ZERO;
+                auto vertex = Vec3();
+                auto tangent = Vec3();
                 for (int i = 0; i < len; i++) {
                     int ii = i + basis.first;
                     vertex += controls[ii] * basis.second[i].first;

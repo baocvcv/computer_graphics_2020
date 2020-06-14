@@ -10,7 +10,7 @@ public:
 
     virtual ~Light() = default;
 
-    virtual void getIllumination(const Vector3f &p, Vector3f &dir, Vector3f &col) const = 0;
+    virtual void getIllumination(const Vec3 &p, Vec3 &dir, Vec3 &col) const = 0;
 };
 
 
@@ -18,7 +18,7 @@ class DirectionalLight : public Light {
 public:
     DirectionalLight() = delete;
 
-    DirectionalLight(const Vector3f &d, const Vector3f &c) {
+    DirectionalLight(const Vec3 &d, const Vec3 &c) {
         direction = d.normalized();
         color = c;
     }
@@ -27,7 +27,7 @@ public:
 
     ///@param p unsed in this function
     ///@param distanceToLight not well defined because it's not a point light
-    void getIllumination(const Vector3f &p, Vector3f &dir, Vector3f &col) const override {
+    void getIllumination(const Vec3 &p, Vec3 &dir, Vec3 &col) const override {
         // the direction to the light is the opposite of the
         // direction of the directional light source
         dir = -direction;
@@ -36,8 +36,8 @@ public:
 
 private:
 
-    Vector3f direction;
-    Vector3f color;
+    Vec3 direction;
+    Vec3 color;
 
 };
 
@@ -45,25 +45,25 @@ class PointLight : public Light {
 public:
     PointLight() = delete;
 
-    PointLight(const Vector3f &p, const Vector3f &c) {
+    PointLight(const Vec3 &p, const Vec3 &c) {
         position = p;
         color = c;
     }
 
     ~PointLight() override = default;
 
-    void getIllumination(const Vector3f &p, Vector3f &dir, Vector3f &col) const override {
+    void getIllumination(const Vec3 &p, Vec3 &dir, Vec3 &col) const override {
         // the direction to the light is the opposite of the
         // direction of the directional light source
         dir = (position - p);
-        dir = dir / dir.length();
+        dir = dir / dir.len();
         col = color;
     }
 
 private:
 
-    Vector3f position;
-    Vector3f color;
+    Vec3 position;
+    Vec3 color;
 
 };
 

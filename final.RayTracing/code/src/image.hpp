@@ -14,7 +14,7 @@ public:
     Image(int w, int h) {
         width = w;
         height = h;
-        data = new Vector3f[width * height];
+        data = new Vec3[width * height];
     }
 
     ~Image() {
@@ -27,7 +27,7 @@ public:
             delete[] data;
         width = w;
         height = h;
-        data = new Vector3f[width * height];
+        data = new Vec3[width * height];
     }
 
     int Width() const {
@@ -38,25 +38,25 @@ public:
         return height;
     }
 
-    const Vector3f &GetPixel(int x, int y) const {
+    const Vec3 &GetPixel(int x, int y) const {
         assert(x >= 0 && x < width);
         assert(y >= 0 && y < height);
         return data[y * width + x];
     }
 
-    void SetAllPixels(const Vector3f &color) {
+    void SetAllPixels(const Vec3 &color) {
         for (int i = 0; i < width * height; ++i) {
             data[i] = color;
         }
     }
 
-    void SetPixel(int x, int y, const Vector3f &color) {
+    void SetPixel(int x, int y, const Vec3 &color) {
         assert(x >= 0 && x < width);
         assert(y >= 0 && y < height);
         data[y * width + x] = color;
     }
 
-    void IncrementPixel(int x, int y, const Vector3f &color) {
+    void IncrementPixel(int x, int y, const Vec3 &color) {
         assert(x >= 0 && x < width);
         assert(y >= 0 && y < height);
         data[y * width + x] += color;
@@ -78,7 +78,7 @@ private:
 
     int width;
     int height;
-    Vector3f *data;
+    Vec3 *data;
 
 };
 

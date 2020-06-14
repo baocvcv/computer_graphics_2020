@@ -1,23 +1,43 @@
 #ifndef SCENE_PARSER_H
 #define SCENE_PARSER_H
 
+#include "camera.hpp"
+#include "object3d.hpp"
+#include "helpers.hpp"
 #include "group.hpp"
+#include "mesh.hpp"
+#include "curve.hpp"
+#include "revsurface.hpp"
+#include "json.hpp"
+#include "vec.hpp"
+#include "mat44.hpp"
+
 #include <cassert>
 #include <vecmath.h>
-
-class Camera;
-class Light;
-class Material;
-class Object3D;
-class Sphere;
-class Plane;
-class Triangle;
-class Transform;
-class Mesh;
-class Curve;
-class RevSurface;
+#include <vector>
+#include <string>
+#include <fstream>
+#include <iostream>
 
 #define MAX_PARSER_TOKEN_LENGTH 1024
+
+class MySceneParser {
+public:
+    PerspectiveCamera* camera;
+    std::vector<Material> materials;
+    Group group;
+    Group lights;
+    nlohmann::json scene;
+
+    MySceneParser() = delete;
+    MySceneParser(std::string filename) {
+        std::ifstream infile(filename);
+        if (!infile.is_open()) {
+            std::cout << "Cannot open scene file\n";
+        }
+        infile >> scene;
+    }
+};
 
 class SceneParser {
 public:
@@ -31,7 +51,7 @@ public:
         return camera;
     }
 
-    Vector3f getBackgroundColor() const {
+    Vec3 getBackgroundColor() const {
         return background_color;
     }
 
@@ -69,7 +89,7 @@ public:
 
     int getToken(char token[MAX_PARSER_TOKEN_LENGTH]);
 
-    Vector3f readVector3f();
+    Vec3 readVector3f();
 
     float readFloat();
     int readInt();
@@ -82,7 +102,7 @@ public:
     Material *current_material;
     Group *group;
 
-    Vector3f background_color;
+    Vec3 background_color;
 };
 
 #endif // SCENE_PARSER_H

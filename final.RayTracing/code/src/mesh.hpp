@@ -1,10 +1,9 @@
 #ifndef MESH_H
 #define MESH_H
 
+#include "common.hpp"
 #include "object3d.hpp"
-#include "Vector2f.h"
-#include "Vector3f.h"
-#include <vector>
+#include "vec.hpp"
 
 class Mesh : public Object3D {
 public:
@@ -17,9 +16,9 @@ public:
         int x[3]{};
     };
 
-    std::vector<Vector3f> v;
+    std::vector<Vec3> v;
     std::vector<TriangleIndex> t;
-    std::vector<Vector3f> n;
+    std::vector<Vec3> n;
 
     Mesh(const char *filename, Material *m);
 
