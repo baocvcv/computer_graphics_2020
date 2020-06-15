@@ -3,25 +3,25 @@ PerspectiveCamera {
     center 0 0 10
     direction 0 0 -1
     up 0 1 0
-    angle 50
-    width 800
-    height 800
+    angle 60
+    width 1280
+    height 720
 }
 
 Materials {
     numMaterials 6
     Material {
         Type diffuse
-        Color 1 0 0 
-    }
-    Material {
-        Type specular
-        Color 0 1 0
+        Color 0.75 0.25 0.25
     }
     Material {
         Type refract
-        Color 0 0 1
+        Color 0.999 0.999 0.999
         n 1.5
+    }
+    Material {
+        Type specular
+        Color 0.25 0.25 0.75
     }
     Material {
         Type diffuse
@@ -32,8 +32,8 @@ Materials {
         Color 1 1 1 
     }
     Material {
-        Type refract
-        Emission 10 10 10
+        Type diffuse
+        Emission 12 12 12
         n 1.5
     }
 }
@@ -66,28 +66,28 @@ Group {
     MaterialIndex 3
     Plane {
 	normal 0 1 0
-        offset -2
+        point 0 -2 0
     }
     Plane {
         normal 0 -1 0
-        offset -10
+        point 0 10 0
     }
     Plane {
         normal 1 0 0
-        offset -10
+        point -10 0 0
     }
     MaterialIndex 4
     Plane {
         normal -1 0 0
-        offset -10
+        point 10 0 0
     }
     Plane {
         normal 0 0 1
-        offset -10
+        point 0 0 -10
     }
     Plane {
         normal 0 0 -1
-        offset -10
+        point 0 0 10
     }
     MaterialIndex 5
     Sphere {

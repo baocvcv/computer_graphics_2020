@@ -3,9 +3,9 @@
 #include "image.hpp"
 #include "camera.hpp"
 #include "object3d.hpp"
-#include "light.hpp"
 #include "group.hpp"
 #include "ray_tracer.hpp"
+#include "scene_parser.hpp"
 
 using namespace std;
 
@@ -27,9 +27,11 @@ int main(int argc, char *argv[]) {
 
     // SceneParser sp(inputFile.c_str());
 
-    Scene sc = getScene1();
     Image outImg;
-    renderFrame(sc, outImg, 400);
+    Scene sc = getScene2();
+    renderFrame(sc, outImg, 10);
+    // auto sp("../testcases/scene01_basic.txt");
+    // renderFrame(sp, outImg, 40);
     outImg.SaveImage(outputFile.c_str());
 
     // cout << "Hello! Computer Graphics!" << endl;

@@ -5,31 +5,33 @@
 #include "vec.hpp"
 #include "mat44.hpp"
 
+#include "scene_parser.hpp"
+
 using namespace std;
 
 Vec3 radiance(const Ray &r, int depth, Group *group, unsigned short *Xi) {
     if (depth >= 5) return Vec3();
 
     Hit h;
-    double tmin = 1e-6;
     Vec3 color;
-    if (group->intersect(r, h, tmin)) {
+    if (group->intersect(r, h, eps)) {
         //TODO : smallpt
 
         Vec3 x = r.pointAtParameter(h.t);
         Vec3 n = h.normal;
         color = h.material->emission;
+        auto material_color = h.material->getColor(h.uv);
         switch (h.material->type)
         {
             case MaterialType::DIFFUSE: {
 
                 auto diffuse = diffuseRay(r, h, Xi); //h.material->diffuseRay(r, h, Xi);
-                color += h.material->color * radiance(diffuse, depth+1, group, Xi);
+                color += material_color * radiance(diffuse, depth+1, group, Xi);
                 break;
             }
             case MaterialType::SPECULAR: {
                 auto spec = specularRay(r, h);
-                color += h.material->color * radiance(spec, depth+1, group, Xi);
+                color += material_color * radiance(spec, depth+1, group, Xi);
                 break;
             }
             case MaterialType::REFRACTIVE: {
@@ -38,15 +40,15 @@ Vec3 radiance(const Ray &r, int depth, Group *group, unsigned short *Xi) {
                 auto refract = rays.second;
                 if (depth >= 2) {
                     if (erand48(Xi) < reflect.second) {
-                        color += h.material->color * radiance(reflect.first, depth+1, group, Xi);
+                        color += material_color * radiance(reflect.first, depth+1, group, Xi);
                     } else {
-                        color += h.material->color * radiance(refract.first, depth+1, group, Xi);
+                        color += material_color * radiance(refract.first, depth+1, group, Xi);
                     }
                 } else {
-                    if (refract.second < tmin) {
-                        color += h.material->color * radiance(reflect.first, depth+1, group, Xi);
+                    if (refract.second < eps) {
+                        color += material_color * radiance(reflect.first, depth+1, group, Xi);
                     } else {
-                        color += h.material->color * (radiance(reflect.first, depth+1, group, Xi) * reflect.second
+                        color += material_color * (radiance(reflect.first, depth+1, group, Xi) * reflect.second
                             + radiance(refract.first, depth+1, group, Xi) * refract.second);
                     }
                 }
@@ -68,7 +70,7 @@ void renderFrame(const Scene& sp, Image& outImg, int samps) {
     for (int y = 0; y < h; y++)
     { // Loop over image rows
         fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * 4, 100. * y / (h - 1));
-        for (unsigned short x = 0, Xi[3] = {0, 0, y * y * y}; x < w; x++) {// Loop cols
+        for (unsigned short x = 0, Xi[3] = {0, 0, (unsigned short) (y*y*y)}; x < w; x++) {
             outImg.SetPixel(x, y, Vec3());
             for (int sy = 0; sy < 2; sy++) {      // 2x2 subpixel rows, i = index of pixels unrolled
                 for (int sx = 0; sx < 2; sx++) { // 2x2 subpixel cols
@@ -89,4 +91,9 @@ void renderFrame(const Scene& sp, Image& outImg, int samps) {
             }
         }
     }
+}
+
+void renderFrame(const SceneParser& sp, Image& outImage, int sampls) {
+    Scene sc(sp.camera, sp.group);
+    renderFrame(sc, outImage, sampls);
 }

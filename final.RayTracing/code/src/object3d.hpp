@@ -37,19 +37,21 @@ public:
     Plane(): Object3D() {}
 
     Plane(const Vec3 &normal_, const Vec3 &p_, Material *m) :
-        Object3D(m), p(p_), normal(normal_) {
-            d = normal_.dot(p_);
+        Object3D(m), p(p_), normal(normal_.normalized()) {
+            d = normal.dot(p_);
         }
 
     ~Plane() override = default;
 
     bool intersect(const Ray &r, Hit &h, float tmin) override {
         // ray r is parallel with the plane
-        if (abs_f(r.dir ^ normal) < 1e-8)
+        double m = r.dir.dot(normal);
+        if (abs_f(m) < 1e-9)
             return false;
 
         // not parallel
-        float t = solve(r);
+        double s = d - normal.dot(r.origin);
+        double t = s / m; 
         if (t > tmin) {
             h.set(t, material, normal);
             return true;
@@ -57,11 +59,11 @@ public:
         return false;
     }
 
-    float solve(const Ray &r) {
-        float s = d - normal.dot(r.origin);
-        float t = s / normal.dot(r.dir);
-        return t;
-    }
+    // float solve(const Ray &r) {
+    //     float s = d - normal.dot(r.origin);
+    //     float t = s / normal.dot(r.dir);
+    //     return t;
+    // }
 };
 
 class Sphere : public Object3D {
@@ -88,7 +90,9 @@ public:
         if (t < tmin) return false;
         else {
             Vec3 normal = r.pointAtParameter(t) - center;
-            h.set(t, material, normal.normalized());
+            double u = 0.5 + atan2(normal.z, normal.x) / (2. * M_PI);
+            double v = 0.5 - asin(normal.y) / M_PI;
+            h.set(t, material, normal.normalized(), Vec3(u, v));
             return true;
         }
     }
@@ -122,7 +126,13 @@ public:
         Ray tr(trSource, trDirection);
         bool inter = o->intersect(tr, h, tmin);
         if (inter) {
-            h.set(h.t, h.material, transformDirection(transform.transposed(), h.normal).normalized());
+            h.normal = transformDirection(transform.transposed(),
+                h.normal).normalized();
+            // h.set(
+            //     h.t,
+            //     h.material,
+            //     transformDirection(transform.transposed(), h.normal).normalized(),
+            //     h.uv);
         }
         return inter;
     }
@@ -137,27 +147,29 @@ public:
 
     // a b c are three vertex positions of the triangle
 	Triangle( const Vec3& a, const Vec3& b, const Vec3& c, Material* m) :
-        Plane(b-a.cross(c-a).normalized(), a, m), vertices{a, b, c} {}
+        Plane(b-a.cross(c-a), a, m), vertices{a, b, c} {}
 
 	bool intersect( const Ray& ray,  Hit& hit , float tmin) override {
 		// solve the intersection between ray and the triangle plane
-		float t = solve(ray);
-		Vec3 p = ray.pointAtParameter(t); // the intersection point
+        Hit h_tmp;
+        if (Plane::intersect(ray, h_tmp, tmin)) {
+            Vec3 p = ray.pointAtParameter(h_tmp.t); // the intersection point
 
-		// determin if is inside the triangle
-		// using the Barycentric Technique
-		// see https://blackpawn.com/texts/pointinpoly/default.html
-		Vec3 v0 = vertices[2] - vertices[0];
-		Vec3 v1 = vertices[1] - vertices[0];
-		Vec3 v2 = p - vertices[0];
-		float denominator = v0.len2()*v1.len2() - v0.dot(v1)*v1.dot(v0);
-		float u = (v1.len2()*v2.dot(v0) - v1.dot(v0)*v2.dot(v1)) / denominator;
-		float v = (v0.len2()*v2.dot(v1) - v0.dot(v1)*v2.dot(v0)) / denominator;
-		if (good(u) && good(v) && good(u+v) && t >= tmin) {
-			hit.set(t, material, normal);
-			return true;
-		} else
-			return false;
+            // determin if is inside the triangle
+            // using the Barycentric Technique
+            // see https://blackpawn.com/texts/pointinpoly/default.html
+            Vec3 v0 = vertices[2] - vertices[0];
+            Vec3 v1 = vertices[1] - vertices[0];
+            Vec3 v2 = p - vertices[0];
+            float denominator = v0.len2()*v1.len2() - v0.dot(v1)*v1.dot(v0);
+            float u = (v1.len2()*v2.dot(v0) - v1.dot(v0)*v2.dot(v1)) / denominator;
+            float v = (v0.len2()*v2.dot(v1) - v0.dot(v1)*v2.dot(v0)) / denominator;
+            if (good(u) && good(v) && good(u+v)) {
+                hit = h_tmp;
+                return true;
+            }
+        }
+        return false;
 	}
 	
 	inline bool good(double x) { return (0 <= x && x <= 1); }
@@ -170,19 +182,21 @@ public:
 
     Rectangle() {}
 
-    Rectangle(Vec3 p_, Vec3 u_, Vec3 v_, Material *m) :
-        Plane(u_.cross(v_), p_, m), u(u_.normalized()),
+    Rectangle(const Vec3& p_, const Vec3& u_, const Vec3& v_, Material *m) :
+        Plane(v_.cross(u_), p_, m), u(u_.normalized()),
         v(v_.normalized()), u_len_inv(1. / u_.len()),
         v_len_inv(1. / v_.len()) {}
     
     bool intersect(const Ray& r, Hit& h, float tmin) override {
-        float t = solve(r);
-        Vec3 p_to_x = r.pointAtParameter(t) - p; // p -> point of intersection
-        double du = p_to_x.dot(u);
-        double dv = p_to_x.dot(v);
-        if (tmin < du && du < 1-tmin && tmin < dv && dv < 1-tmin) {
-            h.set(t, material, normal);
-            return true;
+        Hit h_tmp;
+        if (Plane::intersect(r, h_tmp, tmin)) {
+            Vec3 p_to_x = r.pointAtParameter(h_tmp.t) - p; // p -> point of intersection
+            double du = p_to_x.dot(u) * u_len_inv;
+            double dv = p_to_x.dot(v) * v_len_inv;
+            if (tmin < du && du < 1-tmin && tmin < dv && dv < 1-tmin) {
+                h.set(h_tmp.t, h_tmp.material, h_tmp.normal, Vec3(du, dv));
+                return true;
+            }
         }
         return false;
     }
@@ -194,7 +208,7 @@ public:
     float r;
     Vec3 u, v;
 
-    Circle(Vec3 c, float r_, Vec3 n, Material *m): Plane(n, c, m), r(r_) {
+    Circle(const Vec3& c, float r_, const Vec3& n, Material *m): Plane(n, c, m), r(r_) {
         if (n.x < 1.0) {
             u.x = n.z;
             u.y = 0.;
@@ -209,12 +223,14 @@ public:
     }
 
     bool intersect(const Ray& ray, Hit& h, float tmin) override {
-        float t = solve(ray);
-        Vec3 x = ray.pointAtParameter(t);
-        double dist = (x - p).len();
-        if (t > tmin && dist < r) {
-            h.set(t, material, normal);
-            return true;
+        Hit h_tmp;
+        if (Plane::intersect(ray, h_tmp, tmin)) {
+            Vec3 x = ray.pointAtParameter(h_tmp.t);
+            double dist = (x - p).len();
+            if (dist < r) {
+                h = h_tmp;
+                return true;
+            }
         }
         return false;
     }

@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "helpers.hpp"
-#include "light.hpp"
 #include "image.hpp"
 #include "group.hpp"
 #include "vec.hpp"
@@ -23,8 +22,8 @@ public:
     Camera(const Vec3 &center, const Vec3 &direction, const Vec3 &up, int imgW, int imgH) {
         this->center = center;
         this->direction = direction.normalized();
-        this->horizontal = this->direction % up; // Vec3::cross(this->direction, up);
-        this->up = this->horizontal % this->direction; //Vec3::cross(this->horizontal, this->direction);
+        this->horizontal = this->direction.cross(up); // Vec3::cross(this->direction, up);
+        this->up = this->horizontal.cross(this->direction); //Vec3::cross(this->horizontal, this->direction);
         this->width = imgW;
         this->height = imgH;
     }

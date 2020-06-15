@@ -1,14 +1,12 @@
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
-#include <cmath>
-#include <vector>
-
 #include "scene_parser.hpp"
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+#include "helpers.hpp"
+#include "camera.hpp"
+#include "object3d.hpp"
+#include "mesh.hpp"
+#include "curve.hpp"
+#include "revsurface.hpp"
+#include "vec.hpp"
+#include "mat44.hpp"
 
 #define DegreesToRadians(x) ((M_PI * x) / 180.0f)
 
@@ -140,30 +138,6 @@ void SceneParser::parseBackground() {
 // ====================================================================
 
 void SceneParser::parseLights() {
-    // char token[MAX_PARSER_TOKEN_LENGTH];
-    // getToken(token);
-    // assert (!strcmp(token, "{"));
-    // // read in the number of objects
-    // getToken(token);
-    // assert (!strcmp(token, "numLights"));
-    // num_lights = readInt();
-    // lights = new Light *[num_lights];
-    // // read in the objects
-    // int count = 0;
-    // while (num_lights > count) {
-    //     getToken(token);
-    //     if (strcmp(token, "DirectionalLight") == 0) {
-    //         lights[count] = parseDirectionalLight();
-    //     } else if (strcmp(token, "PointLight") == 0) {
-    //         lights[count] = parsePointLight();
-    //     } else {
-    //         printf("Unknown token in parseLight: '%s'\n", token);
-    //         exit(0);
-    //     }
-    //     count++;
-    // }
-    // getToken(token);
-    // assert (!strcmp(token, "}"));
     for (auto obj : group->objects) {
         if (obj->material->emission.non_zero()) {
             lights.addObject(obj);
@@ -171,35 +145,6 @@ void SceneParser::parseLights() {
     }
 }
 
-Light *SceneParser::parseDirectionalLight() {
-    char token[MAX_PARSER_TOKEN_LENGTH];
-    getToken(token);
-    assert (!strcmp(token, "{"));
-    getToken(token);
-    assert (!strcmp(token, "direction"));
-    Vec3 direction = readVector3f();
-    getToken(token);
-    assert (!strcmp(token, "color"));
-    Vec3 color = readVector3f();
-    getToken(token);
-    assert (!strcmp(token, "}"));
-    return new DirectionalLight(direction, color);
-}
-
-Light *SceneParser::parsePointLight() {
-    char token[MAX_PARSER_TOKEN_LENGTH];
-    getToken(token);
-    assert (!strcmp(token, "{"));
-    getToken(token);
-    assert (!strcmp(token, "position"));
-    Vec3 position = readVector3f();
-    getToken(token);
-    assert (!strcmp(token, "color"));
-    Vec3 color = readVector3f();
-    getToken(token);
-    assert (!strcmp(token, "}"));
-    return new PointLight(position, color);
-}
 // ====================================================================
 // ====================================================================
 

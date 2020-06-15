@@ -1,6 +1,11 @@
 #ifndef HELPERS_H_
 #define HELPERS_H_
 
+#ifndef STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#endif
+
 #include "common.hpp"
 #include "vec.hpp"
 
@@ -75,9 +80,11 @@ public:
             }
 
     Material(const Material& m): type(m.type), color(m.color), emission(m.emission),
-        n_material(m.n_material), w(m.w), h(m.h), _c(m._c) {
-            texture_buf = new unsigned char[sizeof(m.texture_buf) / sizeof(unsigned char)];
-            memcpy(texture_buf, m.texture_buf, sizeof(m.texture_buf));
+        n_material(m.n_material), w(m.w), h(m.h), _c(m._c), texture_buf(nullptr) {
+            if (m.texture_buf != nullptr) {
+                texture_buf = new unsigned char[sizeof(m.texture_buf) / sizeof(unsigned char)];
+                memcpy(texture_buf, m.texture_buf, sizeof(m.texture_buf));
+            }
         }
 
     virtual ~Material() = default;
@@ -102,10 +109,17 @@ public:
         if (texture_buf == nullptr) {
             return color;
         }
-        int pw = (int(uv.x*w) % w + w) % w;
-        int ph = (int(uv.y*h) % h + h) % h;
+        // int pw = (((int)(uv.x*w)) % w + w) % w;
+        // int ph = (((int)(uv.y*h)) % h + h) % h;
+        // int pw = (int(uv.x*w)) % w;
+        // int ph = (int(uv.y*h)) % h;
+        int pw = uv.x * w;
+        int ph = uv.y * h;
         int x = ph * w * _c + pw * _c;
-        return Vec3(texture_buf[x], texture_buf[x+1], texture_buf[x+2]) / 255.;
+
+        auto c = Vec3(texture_buf[x], texture_buf[x+1], texture_buf[x+2]) / 255.;
+        return c;
+        // return Vec3(texture_buf[x], texture_buf[x+1], texture_buf[x+2]) / 255.;
     }
 };
 
@@ -114,10 +128,12 @@ Ray diffuseRay(const Ray &ray, const Hit &hit, unsigned short *Xi) {
     double r1 = 2 * M_PI * erand48(Xi); // angle
     double r2 = erand48(Xi), r2s = sqrt(r2);
     Vec3 w = hit.normal;
+    if (w.dot(ray.dir) > 0)
+        w = -w;
     // u, v are vectors on the tangent plane at x
 
-    Vec3 u = (fabs(w.x) > .1 ? Vec3(0, 1, 0)
-                                : w % Vec3(1, 0, 0)).normalized();
+    Vec3 u = (fabs(w.x) > .1 ? Vec3(0, 1)
+                             : Vec3(1)).cross(w).normalized();
     Vec3 v = w % u;
     // TODO: what is this?
     Vec3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).normalized();
@@ -138,8 +154,9 @@ std::pair<std::pair<Ray, double>, std::pair<Ray, double>> refractiveRay(
     double n_material = hit.material->n_material;
     //TODO: understande the math here
     double r0 = square(n_air - n_material) / square(n_air + n_material);
-    Ray reflect = specularRay(ray, hit);
-    double cos_theta = ray.dir ^ hit.normal;
+    auto p = ray.pointAtParameter(hit.t);
+    Ray reflect = Ray(p, ray.dir.reflect(hit.normal)); // specularRay(ray, hit);
+    double cos_theta = ray.dir.dot(hit.normal);
     double sin_theta = sqrt(1 - cos_theta * cos_theta);
     double n;
     Vec3 norm = hit.normal;
@@ -155,9 +172,9 @@ std::pair<std::pair<Ray, double>, std::pair<Ray, double>> refractiveRay(
     }
 
     Vec3 refract_d = norm * (sqrt(1 - sin_theta*sin_theta / (n*n)) - cos_theta/n) + ray.dir / n;
-    Ray refract(ray.pointAtParameter(hit.t), refract_d);
-    double refract_i = r0 + (1. - r0) * pow((1. - cos_theta), 5);
-    double reflect_i = 1. - refract_i;
+    Ray refract(p, refract_d);
+    double reflect_i = r0 + (1. - r0) * pow((1. - cos_theta), 5);
+    double refract_i = 1. - reflect_i;
     return { {reflect, reflect_i}, {refract, refract_i} };
 }
 
