@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
     Image outImg;
     Scene sc = getScene2();
-    renderFrame(sc, outImg, 10);
+    renderFrame(sc, outImg, 30);
     // auto sp("../testcases/scene01_basic.txt");
     // renderFrame(sp, outImg, 40);
     outImg.SaveImage(outputFile.c_str());

@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "object3d.hpp"
 #include "vec.hpp"
+#include "mat44.hpp"
 
 class Mesh : public Object3D {
 public:
@@ -19,8 +20,11 @@ public:
     std::vector<Vec3> v;
     std::vector<TriangleIndex> t;
     std::vector<Vec3> n;
+    std::vector<Vec3> uv;
+    int mesh_type;
 
-    Mesh(const char *filename, Material *m) {
+    Mesh(const char *filename, Material *m, int type_=0) {
+        mesh_type = type_;
         // Optional: Use tiny obj loader to replace this simple one.
         std::ifstream f;
         f.open(filename);
@@ -32,6 +36,7 @@ public:
         std::string vTok("v");
         std::string fTok("f");
         std::string texTok("vt");
+        std::string vnTok("vn");
         char bslash = '/', space = ' ';
         std::string tok;
         int texID;
@@ -42,11 +47,11 @@ public:
             if (line.at(0) == '#') { continue; }
             std::stringstream ss(line);
             ss >> tok;
-            if (tok == vTok) {
+            if (tok == vTok) { // geometric vertices
                 Vec3 vec;
                 ss >> vec.x >> vec.y >> vec.z;
                 v.push_back(vec);
-            } else if (tok == fTok) {
+            } else if (tok == fTok) { // face
                 if (line.find(bslash) != std::string::npos) {
                     std::replace(line.begin(), line.end(), bslash, space);
                     std::stringstream facess(line);
@@ -65,14 +70,20 @@ public:
                     }
                     t.push_back(trig);
                 }
-            } else if (tok == texTok) {
+            } else if (tok == texTok) { // texture vertices
+                // TODO: rust version uses -y
                 Vec3 texcoord;
-                ss >> texcoord.x;
-                ss >> texcoord.y;
+                ss >> texcoord.x >> texcoord.y;
+                uv.push_back(texcoord);
+            } else if (tok == vnTok) { // vertex normals
+                Vec3 normal;
+                ss >> normal.x >> normal.y >> normal.z;
+                n.push_back(normal);
             }
         }
         f.close();
-        computeNormal();
+        if (mesh_type == 0)
+            computeNormal();
     }
 
     bool intersect(const Ray &r, Hit &h, float tmin) override {

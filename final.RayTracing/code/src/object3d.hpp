@@ -22,7 +22,7 @@ public:
     // Intersect Ray with this object. If hit, store information in hit structure.
     virtual bool intersect(const Ray &r, Hit &h, float tmin) = 0;
 
-    inline double abs_f(double x) { return (x<0 ? -x : x);}
+    inline float abs_f(float x) { return (x<0 ? -x : x);}
 
 };
 
@@ -45,13 +45,13 @@ public:
 
     bool intersect(const Ray &r, Hit &h, float tmin) override {
         // ray r is parallel with the plane
-        double m = r.dir.dot(normal);
+        float m = r.dir.dot(normal);
         if (abs_f(m) < 1e-9)
             return false;
 
         // not parallel
-        double s = d - normal.dot(r.origin);
-        double t = s / m; 
+        float s = d - normal.dot(r.origin);
+        float t = s / m; 
         if (t > tmin) {
             h.set(t, material, normal);
             return true;
@@ -69,7 +69,7 @@ public:
 class Sphere : public Object3D {
 public:
     Vec3 center;
-    double radius;
+    float radius;
 
     // unit ball at the center
     Sphere() : center(), radius(1.) {}
@@ -82,16 +82,16 @@ public:
     bool intersect(const Ray &r, Hit &h, float tmin) override {
         // Calc dist from center to ray r
         Vec3 originToCent = center - r.origin;
-        double d1 = abs_f(r.dir.normalized().dot(originToCent));
-        double d2 = originToCent.len2() - d1 * d1; // center to ray r
+        float d1 = abs_f(r.dir.normalized().dot(originToCent));
+        float d2 = originToCent.len2() - d1 * d1; // center to ray r
         // Cals intersection
-        double interHalfLen = sqrt(radius*radius - d2);
-        double t = d1 - interHalfLen;
+        float interHalfLen = sqrt(radius*radius - d2);
+        float t = d1 - interHalfLen;
         if (t < tmin) return false;
         else {
             Vec3 normal = r.pointAtParameter(t) - center;
-            double u = 0.5 + atan2(normal.z, normal.x) / (2. * M_PI);
-            double v = 0.5 - asin(normal.y) / M_PI;
+            float u = 0.5 + atan2(normal.z, normal.x) / (2. * M_PI);
+            float v = 0.5 - asin(normal.y) / M_PI;
             h.set(t, material, normal.normalized(), Vec3(u, v));
             return true;
         }
@@ -172,7 +172,7 @@ public:
         return false;
 	}
 	
-	inline bool good(double x) { return (0 <= x && x <= 1); }
+	inline bool good(float x) { return (0 <= x && x <= 1); }
 };
 
 class Rectangle: public Plane {
@@ -191,8 +191,8 @@ public:
         Hit h_tmp;
         if (Plane::intersect(r, h_tmp, tmin)) {
             Vec3 p_to_x = r.pointAtParameter(h_tmp.t) - p; // p -> point of intersection
-            double du = p_to_x.dot(u) * u_len_inv;
-            double dv = p_to_x.dot(v) * v_len_inv;
+            float du = p_to_x.dot(u) * u_len_inv;
+            float dv = p_to_x.dot(v) * v_len_inv;
             if (tmin < du && du < 1-tmin && tmin < dv && dv < 1-tmin) {
                 h.set(h_tmp.t, h_tmp.material, h_tmp.normal, Vec3(du, dv));
                 return true;
@@ -226,7 +226,7 @@ public:
         Hit h_tmp;
         if (Plane::intersect(ray, h_tmp, tmin)) {
             Vec3 x = ray.pointAtParameter(h_tmp.t);
-            double dist = (x - p).len();
+            float dist = (x - p).len();
             if (dist < r) {
                 h = h_tmp;
                 return true;

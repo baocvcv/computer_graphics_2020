@@ -125,8 +125,8 @@ public:
 
 Ray diffuseRay(const Ray &ray, const Hit &hit, unsigned short *Xi) {
     // Ideal DIFFUSE reflection
-    double r1 = 2 * M_PI * erand48(Xi); // angle
-    double r2 = erand48(Xi), r2s = sqrt(r2);
+    float r1 = 2 * M_PI * erand48(Xi); // angle
+    float r2 = erand48(Xi), r2s = sqrt(r2);
     Vec3 w = hit.normal;
     if (w.dot(ray.dir) > 0)
         w = -w;
@@ -147,18 +147,18 @@ Ray specularRay(const Ray &ray, const Hit &hit) {
 
 // TODO: currently assume every object is surrounded by air, can probably improve to object surrounded by object?
 // return <reflect, refract>
-std::pair<std::pair<Ray, double>, std::pair<Ray, double>> refractiveRay(
+std::pair<std::pair<Ray, float>, std::pair<Ray, float>> refractiveRay(
         const Ray &ray, const Hit &hit, unsigned short *Xi) {
 
-    double n_air = 1;
-    double n_material = hit.material->n_material;
+    float n_air = 1;
+    float n_material = hit.material->n_material;
     //TODO: understande the math here
-    double r0 = square(n_air - n_material) / square(n_air + n_material);
+    float r0 = square(n_air - n_material) / square(n_air + n_material);
     auto p = ray.pointAtParameter(hit.t);
     Ray reflect = Ray(p, ray.dir.reflect(hit.normal)); // specularRay(ray, hit);
-    double cos_theta = ray.dir.dot(hit.normal);
-    double sin_theta = sqrt(1 - cos_theta * cos_theta);
-    double n;
+    float cos_theta = ray.dir.dot(hit.normal);
+    float sin_theta = sqrt(1 - cos_theta * cos_theta);
+    float n;
     Vec3 norm = hit.normal;
     if (cos_theta < 0) { // from inside
         n = n_material / n_air;
@@ -173,8 +173,8 @@ std::pair<std::pair<Ray, double>, std::pair<Ray, double>> refractiveRay(
 
     Vec3 refract_d = norm * (sqrt(1 - sin_theta*sin_theta / (n*n)) - cos_theta/n) + ray.dir / n;
     Ray refract(p, refract_d);
-    double reflect_i = r0 + (1. - r0) * pow((1. - cos_theta), 5);
-    double refract_i = 1. - reflect_i;
+    float reflect_i = r0 + (1. - r0) * pow((1. - cos_theta), 5);
+    float refract_i = 1. - reflect_i;
     return { {reflect, reflect_i}, {refract, refract_i} };
 }
 

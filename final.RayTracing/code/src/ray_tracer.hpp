@@ -76,12 +76,12 @@ void renderFrame(const Scene& sp, Image& outImg, int samps) {
                 for (int sx = 0; sx < 2; sx++) { // 2x2 subpixel cols
                     r = Vec3();
                     for (int s = 0; s < samps; s++) {
-                        double r1 = 2 * erand48(Xi), r2 = 2 * erand48(Xi);
-                        double dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-                        double dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+                        float r1 = 2 * erand48(Xi), r2 = 2 * erand48(Xi);
+                        float dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+                        float dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
 
                         Vec3 p((sx + .5 + dx) / 2 + x, (sy + .5 + dy) / 2 + y);
-                        Ray d = cam->generateRay(p);
+                        Ray d = cam->generateRay(p, Xi);
                         // Vec d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
                         //         cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
                         r += radiance(d, 0, group, Xi) * (1. / samps);

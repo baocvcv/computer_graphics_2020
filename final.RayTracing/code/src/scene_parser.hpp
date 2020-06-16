@@ -582,30 +582,31 @@ public:
     }
     RevSurface *parseRevSurface()
     {
-        char token[MAX_PARSER_TOKEN_LENGTH];
-        getToken(token);
-        assert(!strcmp(token, "{"));
-        getToken(token);
-        assert(!strcmp(token, "profile"));
-        Curve *profile;
-        getToken(token);
-        if (!strcmp(token, "BezierCurve"))
-        {
-            profile = parseBezierCurve();
-        }
-        else if (!strcmp(token, "BsplineCurve"))
-        {
-            profile = parseBsplineCurve();
-        }
-        else
-        {
-            printf("Unknown profile type in parseRevSurface: '%s'\n", token);
-            exit(0);
-        }
-        getToken(token);
-        assert(!strcmp(token, "}"));
-        auto *answer = new RevSurface(profile, current_material);
-        return answer;
+        // char token[MAX_PARSER_TOKEN_LENGTH];
+        // getToken(token);
+        // assert(!strcmp(token, "{"));
+        // getToken(token);
+        // assert(!strcmp(token, "profile"));
+        // Curve *profile;
+        // getToken(token);
+        // if (!strcmp(token, "BezierCurve"))
+        // {
+        //     profile = parseBezierCurve();
+        // }
+        // else if (!strcmp(token, "BsplineCurve"))
+        // {
+        //     profile = parseBsplineCurve();
+        // }
+        // else
+        // {
+        //     printf("Unknown profile type in parseRevSurface: '%s'\n", token);
+        //     exit(0);
+        // }
+        // getToken(token);
+        // assert(!strcmp(token, "}"));
+        // auto *answer = new RevSurface(profile, current_material);
+        // return answer;
+        return nullptr;
     }
 
     int getToken(char token[MAX_PARSER_TOKEN_LENGTH])

@@ -8,7 +8,7 @@
 #define M_PI
 #endif
 
-const double eps = 1e-6;
+const float eps = 1e-6;
 
 enum class MaterialType {
     DIFFUSE,
@@ -16,13 +16,13 @@ enum class MaterialType {
     REFRACTIVE
 };
 
-inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+inline float clamp(float x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 
-inline unsigned char gamma_trans(double x) {
+inline unsigned char gamma_trans(float x) {
     return 255 * pow(clamp(x), 1. / 2.2) + .5;
 }
 
-inline double square(double x) { return x * x; }
+inline float square(float x) { return x * x; }
 
 
 #endif

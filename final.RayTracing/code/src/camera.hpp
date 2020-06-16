@@ -8,8 +8,7 @@
 #include "vec.hpp"
 #include "mat44.hpp"
 
-class Camera {
-public:
+struct Camera {
     // Extrinsic parameters
     Vec3 center;
     Vec3 direction;
@@ -29,30 +28,60 @@ public:
     }
 
     // Generate rays for each screen-space coordinate
-    virtual Ray generateRay(const Vec3 &point) = 0;
+    virtual Ray generateRay(const Vec3 &point, unsigned short* Xi) = 0;
     // virtual void renderFrame(const SceneParser& sp, Image& outImg, int n_samples) = 0;
     virtual ~Camera() = default;
 };
 
 // TODO: Implement Perspective camera
 // You can add new functions or variables whenever needed.
-class PerspectiveCamera : public Camera {
-public:
-    double distToCanvas;
+struct PerspectiveCamera : public Camera {
+    float distToCanvas;
+    Vec3 bottomLeft;
 
     PerspectiveCamera(const Vec3 &center, const Vec3 &direction,
             const Vec3 &up, int imgW, int imgH, float angle) : Camera(center, direction, up, imgW, imgH) {
         // angle is in radian.
         distToCanvas = imgW / 2.0 / tan(angle / 2);
+        bottomLeft = this->center + this->direction * distToCanvas
+            - this->horizontal * width / 2 - this->up * height / 2;
     }
 
-    Ray generateRay(const Vec3 &point) override {
-        Vec3 d_rc(point.x-width/2+1, point.y-height/2+1, distToCanvas);
-        d_rc.normalize();
-        // Matrix3f R(horizontal, up, direction);
-        Mat44 R(horizontal, up, direction);
-        return Ray(center, R.mult(d_rc));
+    Ray generateRay(const Vec3 &point, unsigned short* Xi) override {
+        // Vec3 d_rc(point.x-width/2+1, point.y-height/2+1, distToCanvas);
+        // d_rc.normalize();
+        // Mat44 R(horizontal, up, direction);
+        // return Ray(center, R.mult(d_rc));
+        auto dir = bottomLeft + horizontal * point.x + up * point.y - center;
+        return Ray(center, dir.normalized());
     }
 };
 
+struct DoFCamera : public PerspectiveCamera {
+    float focus_to_canvas_ratio;
+    float lens_radius;
+
+    DoFCamera(
+        const Vec3& center,
+        const Vec3& direction,
+        const Vec3& up,
+        int imgW,
+        int imgH,
+        float angle,
+        float _aperture,
+        float focusDist
+    ): PerspectiveCamera(center, direction, up, imgW, imgH, angle), lens_radius(_aperture/2) {
+        focus_to_canvas_ratio = focusDist / distToCanvas;
+    }
+
+    Ray generateRay(const Vec3& point, unsigned short* Xi) override {
+        auto dir_to_canvas = bottomLeft + horizontal * point.x + up * point.y - center;
+        auto dir_to_focus_plane = dir_to_canvas * focus_to_canvas_ratio;
+        auto point_on_focus_plane = center + dir_to_focus_plane;
+
+        auto rd = Vec3::random_in_unit_disk(Xi) * lens_radius;
+        auto new_center = center + horizontal * rd.x + up * rd.y;
+        return Ray(new_center, (point_on_focus_plane - new_center).normalized());
+    }
+};
 #endif //CAMERA_H
