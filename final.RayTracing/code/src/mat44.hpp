@@ -5,7 +5,7 @@
 #include <cmath>
 #include <iostream>
 
-void print_mat(const char* msg, float matrix[16]) {
+void print_mat(const char* msg, double matrix[16]) {
     std::cout << msg << std::endl;
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -18,10 +18,10 @@ void print_mat(const char* msg, float matrix[16]) {
 
 struct Mat44
 {
-    float matrix[16];
+    double matrix[16];
 
-    Mat44(float fill=0.) { for (int i = 0; i < 16; i++) matrix[i] = fill; }
-    Mat44(float mat[]) { memcpy(matrix, mat, sizeof(matrix)); }
+    Mat44(double fill=0.) { for (int i = 0; i < 16; i++) matrix[i] = fill; }
+    Mat44(double mat[]) { memcpy(matrix, mat, sizeof(matrix)); }
     Mat44(const Vec3& v0, const Vec3& v1, const Vec3& v2): Mat44() {
         matrix[0] = v0.x, matrix[1] = v1.x, matrix[2] = v2.x;
         matrix[4] = v0.y, matrix[5] = v1.y, matrix[6] = v2.y;
@@ -30,57 +30,57 @@ struct Mat44
     }
     Mat44(const Mat44& m) { memcpy(matrix, m.matrix, sizeof(matrix)); }
 
-    float& operator[](int k) { return matrix[k]; }
-    float operator[](int k) const { return matrix[k]; }
+    double& operator[](int k) { return matrix[k]; }
+    double operator[](int k) const { return matrix[k]; }
 
     static Mat44 identity() {
-        float mat[] = {
+        double mat[] = {
             1., 0., 0., 0.,
             0., 1., 0., 0.,
             0., 0., 1., 0.,
             0., 0., 0., 1.};
         return Mat44(mat);
     }
-    static Mat44 scaling(float sx, float sy, float sz) {
-        float mat[] = {
+    static Mat44 scaling(double sx, double sy, double sz) {
+        double mat[] = {
             sx, 0., 0., 0.,
             0., sy, 0., 0.,
             0., 0., sz, 0.,
             0., 0., 0., 1.};
         return Mat44(mat);
     }
-    static Mat44 translation(float x, float y, float z) {
-        float mat[] = {
+    static Mat44 translation(double x, double y, double z) {
+        double mat[] = {
             1., 0., 0., x,
             0., 1., 0., y,
             0., 0., 1., z,
             0., 0., 0., 1.};
         return Mat44(mat);
     }
-    static Mat44 rot_x(float theta) {
-        float sin_theta = sin(theta);
-        float cos_theta = cos(theta);
-        float mat[] = {
+    static Mat44 rot_x(double theta) {
+        double sin_theta = sin(theta);
+        double cos_theta = cos(theta);
+        double mat[] = {
             1., 0., 0., 0.,
             0., cos_theta, -sin_theta, 0.,
             0., sin_theta, cos_theta, 0.,
             0., 0., 0., 1.};
         return Mat44(mat);
     }
-    static Mat44 rot_y(float theta) {
-        float sin_theta = sin(theta);
-        float cos_theta = cos(theta);
-        float mat[] = {
+    static Mat44 rot_y(double theta) {
+        double sin_theta = sin(theta);
+        double cos_theta = cos(theta);
+        double mat[] = {
             cos_theta, 0., sin_theta, 0.,
             0., 1., 0., 0.,
             -sin_theta, 0., cos_theta, 0.,
             0., 0., 0., 1.};
         return Mat44(mat);
     }
-    static Mat44 rot_z(float theta) {
-        float sin_theta = sin(theta);
-        float cos_theta = cos(theta);
-        float mat[] = {
+    static Mat44 rot_z(double theta) {
+        double sin_theta = sin(theta);
+        double cos_theta = cos(theta);
+        double mat[] = {
             cos_theta, -sin_theta, 0., 0.,
             sin_theta, cos_theta, 0., 0.,
             0., 0., 1., 0.,
@@ -165,18 +165,18 @@ struct Mat44
 
     void exchange_row(int row1, int row2) {
         for (int k = 0; k < 4; k++) {
-            float tmp = matrix[row1*4 + k];
+            double tmp = matrix[row1*4 + k];
             matrix[row1*4 + k] = matrix[row2*4 + k];
             matrix[row2*4 + k] = tmp;
         }
     }
 
-    void scale_row(int row, float factor) {
+    void scale_row(int row, double factor) {
         for (int k = 0; k < 4; k++)
             matrix[row*4 + k] *= factor;
     }
 
-    void add_to_row(int row_from, float factor, int row_to) {
+    void add_to_row(int row_from, double factor, int row_to) {
         for (int k = 0; k < 4; k++)
             matrix[row_to*4 + k] += matrix[row_from*4 + k] * factor;
     }

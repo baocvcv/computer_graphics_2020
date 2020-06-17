@@ -5,16 +5,16 @@
 #include "vec.hpp"
 #include "helpers.hpp"
 
-float min(float a, float b, float c, float d) {
-    float result = a;
+double min(double a, double b, double c, double d) {
+    double result = a;
     result = result < b ? result : b;
     result = result < c ? result : d;
     result = result < d ? result : d;
     return result;
 }
 
-float max(float a, float b, float c, float d) {
-    float result = a;
+double max(double a, double b, double c, double d) {
+    double result = a;
     result = result > b ? result : b;
     result = result > c ? result : d;
     result = result > d ? result : d;
@@ -35,18 +35,18 @@ struct AABB {
         box_l(min(min(a.box_l, b.box_l), min(c.box_l, d.box_l))),
         box_h(max(max(a.box_h, b.box_h), max(c.box_h, d.box_h))) {}
 
-    bool intersect(const Ray& r, float& t_near_global, float& t_far_global) {
-        float t_near = std::numeric_limits<float>::min();
-        float t_far = std::numeric_limits<float>::max();
+    bool intersect(const Ray& r, double& t_near_global, double& t_far_global) {
+        double t_near = std::numeric_limits<double>::min();
+        double t_far = std::numeric_limits<double>::max();
         Vec3 dir = r.dir;
         Vec3 o = r.origin;
-        float arr[6];
+        double arr[6];
 
         if (dir.x == 0) {
             if (o.x < box_l.x || o.x > box_h.x)
                 return false;
-            arr[0] = std::numeric_limits<float>::min();
-            arr[1] = std::numeric_limits<float>::max();
+            arr[0] = std::numeric_limits<double>::min();
+            arr[1] = std::numeric_limits<double>::max();
         } else {
             arr[0] = (box_l.x - o.x) / dir.x;
             arr[1] = (box_h.x - o.x) / dir.x;
@@ -54,8 +54,8 @@ struct AABB {
         if (dir.y == 0) {
             if (o.y < box_l.y || o.y > box_h.y)
                 return false;
-            arr[2] = std::numeric_limits<float>::min();
-            arr[3] = std::numeric_limits<float>::max();
+            arr[2] = std::numeric_limits<double>::min();
+            arr[3] = std::numeric_limits<double>::max();
         } else {
             arr[2] = (box_l.y - o.y) / dir.y;
             arr[3] = (box_h.y - o.y) / dir.y;
@@ -63,8 +63,8 @@ struct AABB {
         if (dir.z == 0) {
             if (o.z < box_l.z || o.z > box_h.z)
                 return false;
-            arr[4] = std::numeric_limits<float>::min();
-            arr[5] = std::numeric_limits<float>::max();
+            arr[4] = std::numeric_limits<double>::min();
+            arr[5] = std::numeric_limits<double>::max();
         } else {
             arr[4] = (box_l.z - o.z) / dir.z;
             arr[5] = (box_h.z - o.z) / dir.z;

@@ -157,8 +157,8 @@ public:
         Vec3 up = readVector3f();
         getToken(token);
         assert(!strcmp(token, "angle"));
-        float angle_degrees = readFloat();
-        float angle_radians = DegreesToRadians(angle_degrees);
+        double angle_degrees = readdouble();
+        double angle_radians = DegreesToRadians(angle_degrees);
         getToken(token);
         assert(!strcmp(token, "width"));
         int width = readInt();
@@ -240,7 +240,7 @@ public:
         char filename[MAX_PARSER_TOKEN_LENGTH];
         filename[0] = 0;
         Vec3 color(0, 0, 0), emission(0, 0, 0);
-        float n = 1.0;
+        double n = 1.0;
         MaterialType type = MaterialType::DIFFUSE;
         getToken(token);
         assert(!strcmp(token, "{"));
@@ -265,7 +265,7 @@ public:
             }
             else if (strcmp(token, "n") == 0)
             {
-                n = readFloat();
+                n = readdouble();
             }
             else if (strcmp(token, "texture") == 0)
             {
@@ -386,7 +386,7 @@ public:
         Vec3 center = readVector3f();
         getToken(token);
         assert(!strcmp(token, "radius"));
-        float radius = readFloat();
+        double radius = readdouble();
         getToken(token);
         assert(!strcmp(token, "}"));
         assert(current_material != nullptr);
@@ -468,7 +468,7 @@ public:
             }
             else if (!strcmp(token, "UniformScale"))
             {
-                float s = readFloat();
+                double s = readdouble();
                 matrix = matrix * Mat44::scaling(s, s, s);
             }
             else if (!strcmp(token, "Translate"))
@@ -478,15 +478,15 @@ public:
             }
             else if (!strcmp(token, "XRotate"))
             {
-                matrix = matrix * Mat44::rot_x(DegreesToRadians(readFloat()));
+                matrix = matrix * Mat44::rot_x(DegreesToRadians(readdouble()));
             }
             else if (!strcmp(token, "YRotate"))
             {
-                matrix = matrix * Mat44::rot_y(DegreesToRadians(readFloat()));
+                matrix = matrix * Mat44::rot_y(DegreesToRadians(readdouble()));
             }
             else if (!strcmp(token, "ZRotate"))
             {
-                matrix = matrix * Mat44::rot_z(DegreesToRadians(readFloat()));
+                matrix = matrix * Mat44::rot_z(DegreesToRadians(readdouble()));
             }
             else if (!strcmp(token, "Matrix4f"))
             {
@@ -497,7 +497,7 @@ public:
                 {
                     for (int i = 0; i < 4; i++)
                     {
-                        float v = readFloat();
+                        double v = readdouble();
                         matrix2[j * 4 + i] = v;
                     }
                 }
@@ -624,23 +624,23 @@ public:
 
     Vec3 readVector3f()
     {
-        float x, y, z;
+        double x, y, z;
         int count = fscanf(file, "%f %f %f", &x, &y, &z);
         if (count != 3)
         {
-            printf("Error trying to read 3 floats to make a Vector3f\n");
+            printf("Error trying to read 3 doubles to make a Vector3f\n");
             assert(0);
         }
         return Vec3(x, y, z);
     }
 
-    float readFloat()
+    double readdouble()
     {
-        float answer;
+        double answer;
         int count = fscanf(file, "%f", &answer);
         if (count != 1)
         {
-            printf("Error trying to read 1 float\n");
+            printf("Error trying to read 1 double\n");
             assert(0);
         }
         return answer;

@@ -20,7 +20,7 @@ public:
     Ray() = delete;
     Ray(const Vec3 &orig, const Vec3 &_dir) : origin(orig), dir(_dir) {}
     Ray(const Ray &r) { origin = r.origin, dir = r.dir; }
-    Vec3 pointAtParameter(float t) const { return origin + dir * t; }
+    Vec3 pointAtParameter(double t) const { return origin + dir * t; }
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Ray &r) {
@@ -31,14 +31,14 @@ inline std::ostream &operator<<(std::ostream &os, const Ray &r) {
 // TODO: add u,v for texture mapping here
 class Hit {
 public:
-    float t;
+    double t;
     Material *material;
     Vec3 normal;
     Vec3 uv;
 
     Hit() : material(nullptr), t(1e38) {}
 
-    Hit(float _t, Material *m, const Vec3 &n, const Vec3& uv_=Vec3()) :
+    Hit(double _t, Material *m, const Vec3 &n, const Vec3& uv_=Vec3()) :
         t(_t), material(m), normal(n), uv(uv_) {}
 
     Hit(const Hit &h) {
@@ -48,7 +48,7 @@ public:
         uv = h.uv;
     }
 
-    void set(float _t, Material *_m, const Vec3 &n, const Vec3& uv_=Vec3()) {
+    void set(double _t, Material *_m, const Vec3 &n, const Vec3& uv_=Vec3()) {
         t = _t;
         material = _m;
         normal = n;
@@ -66,13 +66,13 @@ public:
     MaterialType type;
     Vec3 color;
     Vec3 emission;
-    float n_material; // refraction index
+    double n_material; // refraction index
 
     unsigned char* texture_buf;
     int w, h, _c;
 
     Material(MaterialType t, const Vec3 &c, const Vec3 &e=Vec3(),
-        float n=1., const std::string& texture="") :
+        double n=1., const std::string& texture="") :
             type(t), color(c), emission(e), n_material(n), texture_buf(nullptr) {
                 if (texture != "") {
                     texture_buf = stbi_load(texture.c_str(), &w, &h, &_c, 0);
@@ -93,17 +93,17 @@ public:
                    const Vec3 &dirToLight, const Vec3 &lightColor) { // BRDF
         Vec3 shaded;
 
-        // float t1 = Vector3f::dot(dirToLight, hit.normal); // Lx . N
+        // double t1 = Vector3f::dot(dirToLight, hit.normal); // Lx . N
         // Vector3f Rx = hit.normal * 2 * t1 - dirToLight;
         // t1 = ReLU(t1);
-        // float t2 = ReLU(-Vector3f::dot(ray.getDirection(), Rx));
+        // double t2 = ReLU(-Vector3f::dot(ray.getDirection(), Rx));
         // t2 = pow(t2, shininess);
         // shaded = lightColor * (diffuseColor * t1 + specularColor * t2);
 
         return shaded;
     }
 
-    inline float ReLU(float x) { return (x > 0) ? x : .0; }
+    inline double ReLU(double x) { return (x > 0) ? x : .0; }
 
     Vec3 getColor(Vec3 uv) {
         if (texture_buf == nullptr) {
@@ -125,8 +125,8 @@ public:
 
 Ray diffuseRay(const Ray &ray, const Hit &hit, unsigned short *Xi) {
     // Ideal DIFFUSE reflection
-    float r1 = 2 * M_PI * erand48(Xi); // angle
-    float r2 = erand48(Xi), r2s = sqrt(r2);
+    double r1 = 2 * M_PI * erand48(Xi); // angle
+    double r2 = erand48(Xi), r2s = sqrt(r2);
     Vec3 w = hit.normal;
     if (w.dot(ray.dir) > 0)
         w = -w;
@@ -147,18 +147,19 @@ Ray specularRay(const Ray &ray, const Hit &hit) {
 
 // TODO: currently assume every object is surrounded by air, can probably improve to object surrounded by object?
 // return <reflect, refract>
-std::pair<std::pair<Ray, float>, std::pair<Ray, float>> refractiveRay(
+std::pair<std::pair<Ray, double>, std::pair<Ray, double>> refractiveRay(
         const Ray &ray, const Hit &hit, unsigned short *Xi) {
 
-    float n_air = 1;
-    float n_material = hit.material->n_material;
+    double n_air = 1;
+    double n_material = hit.material->n_material;
     //TODO: understande the math here
-    float r0 = square(n_air - n_material) / square(n_air + n_material);
+    double r0 = square(n_air - n_material) / square(n_air + n_material);
     auto p = ray.pointAtParameter(hit.t);
-    Ray reflect = Ray(p, ray.dir.reflect(hit.normal)); // specularRay(ray, hit);
-    float cos_theta = ray.dir.dot(hit.normal);
-    float sin_theta = sqrt(1 - cos_theta * cos_theta);
-    float n;
+    Ray reflect = Ray(p, ray.dir.reflect(hit.normal));
+
+    double cos_theta = ray.dir.dot(hit.normal);
+    double sin_theta = sqrt(1 - cos_theta * cos_theta);
+    double n;
     Vec3 norm = hit.normal;
     if (cos_theta < 0) { // from inside
         n = n_material / n_air;
@@ -173,8 +174,8 @@ std::pair<std::pair<Ray, float>, std::pair<Ray, float>> refractiveRay(
 
     Vec3 refract_d = norm * (sqrt(1 - sin_theta*sin_theta / (n*n)) - cos_theta/n) + ray.dir / n;
     Ray refract(p, refract_d);
-    float reflect_i = r0 + (1. - r0) * pow((1. - cos_theta), 5);
-    float refract_i = 1. - reflect_i;
+    double reflect_i = r0 + (1. - r0) * pow((1. - cos_theta), 5);
+    double refract_i = 1. - reflect_i;
     return { {reflect, reflect_i}, {refract, refract_i} };
 }
 

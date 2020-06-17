@@ -19,7 +19,7 @@ public:
         }
     }
 
-    bool intersect(const Ray &r, Hit &h, float tmin) override {
+    bool intersect(const Ray &r, Hit &h, double tmin) override {
         // intersect every object in objects
         // find the closest and return
         bool hasIntersect = false;

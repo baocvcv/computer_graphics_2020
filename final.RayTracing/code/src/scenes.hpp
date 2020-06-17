@@ -89,19 +89,19 @@ Scene getScene1() {
 
 Scene getScene2() {
     Group* g = new Group;
-    // PerspectiveCamera* cam = new PerspectiveCamera(
-    //     Vec3(0, 0, 10),
-    //     Vec3(0, 0, -1),
-    //     Vec3(0, 1, 0),
-    //     1280, 1000, M_PI/3.2
-    // );
-    DoFCamera* cam = new DoFCamera(
+    PerspectiveCamera* cam = new PerspectiveCamera(
         Vec3(0, 0, 10),
         Vec3(0, 0, -1),
         Vec3(0, 1, 0),
-        800, 600, M_PI/3.2,
-        .5, 10
+        1280, 1000, M_PI/3.2
     );
+    // DoFCamera* cam = new DoFCamera(
+    //     Vec3(0, 0, 10),
+    //     Vec3(0, 0, -1),
+    //     Vec3(0, 1, 0),
+    //     800, 600, M_PI/3.2,
+    //     .3, 12
+    // );
 
     // walls
 
@@ -113,14 +113,14 @@ Scene getScene2() {
     g->addObject(new Plane(Vec3(0, 0, 1), Vec3(0, 0, -13), &materials[4]));
     g->addObject(new Plane(Vec3(0, 0,-1), Vec3(0, 0, 10), &materials[1]));
     // balls
-    g->addObject(new Sphere(Vec3(), 1.f, &materials[6]));
-    g->addObject(new Sphere(Vec3(-1, -1, 1), .75f, &materials[5]));
-    g->addObject(new Sphere(Vec3(1, -1, -1), .75f, &materials[6]));
+    g->addObject(new Sphere(Vec3(0, 0, -2), 1.8f, &materials[6]));
+    g->addObject(new Sphere(Vec3(-2.5, -1, 2), .75f, &materials[6]));
+    g->addObject(new Sphere(Vec3(3, -1, -5), .75f, &materials[5]));
     g->addObject(new Transform(
-        Mat44::translation(3, 0, 0),
+        Mat44::translation(3, 0, -1),
         new Sphere(Vec3(1, -1, -1), .75f, &materials[6])));
     // light
-    g->addObject(new Sphere(Vec3(0, 7, 7), 3.f, &materials[7]));
+    g->addObject(new Sphere(Vec3(0, 7, 4), 3.f, &materials[7]));
     // bkg
     g->addObject(new Rectangle(Vec3(-10, 10, -12.5), Vec3(20), Vec3(0, -12), &materials[8]));
     // g->addObject(new Rectangle(Vec3(0, 1), Vec3(0, -1), Vec3(1), &materials[3]));
@@ -136,7 +136,7 @@ Scene getScene3() {
         Vec3(0, 0, 10),
         Vec3(0, 0, -1),
         Vec3(0, 1, 0),
-        1280, 1000, M_PI/3.2
+        600, 400, M_PI/3.2
     );
 
     // walls

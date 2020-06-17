@@ -4,6 +4,7 @@
 #include "helpers.hpp"
 #include "vec.hpp"
 #include "mat44.hpp"
+#include "omp.h"
 
 #include "scene_parser.hpp"
 
@@ -35,22 +36,25 @@ Vec3 radiance(const Ray &r, int depth, Group *group, unsigned short *Xi) {
                 break;
             }
             case MaterialType::REFRACTIVE: {
+                //TODO: fix bug
                 auto rays = refractiveRay(r, h, Xi);
                 auto reflect = rays.first;
                 auto refract = rays.second;
+                double P = .25 + .5 * reflect.second;
+                double RP = reflect.second / P, TP = refract.second / (1 - P);
                 if (depth >= 2) {
-                    if (erand48(Xi) < reflect.second) {
-                        color += material_color * radiance(reflect.first, depth+1, group, Xi);
+                    if (erand48(Xi) < P) {
+                        color += material_color * radiance(reflect.first, depth+1, group, Xi) * RP;
                     } else {
-                        color += material_color * radiance(refract.first, depth+1, group, Xi);
+                        color += material_color * radiance(refract.first, depth+1, group, Xi) * TP;
                     }
                 } else {
-                    if (refract.second < eps) {
-                        color += material_color * radiance(reflect.first, depth+1, group, Xi);
-                    } else {
+                    // if (refract.second < eps) {
+                    //     color += material_color * radiance(reflect.first, depth+1, group, Xi);
+                    // } else {
                         color += material_color * (radiance(reflect.first, depth+1, group, Xi) * reflect.second
                             + radiance(refract.first, depth+1, group, Xi) * refract.second);
-                    }
+                    // }
                 }
             }
         }
@@ -76,9 +80,9 @@ void renderFrame(const Scene& sp, Image& outImg, int samps) {
                 for (int sx = 0; sx < 2; sx++) { // 2x2 subpixel cols
                     r = Vec3();
                     for (int s = 0; s < samps; s++) {
-                        float r1 = 2 * erand48(Xi), r2 = 2 * erand48(Xi);
-                        float dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-                        float dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+                        double r1 = 2 * erand48(Xi), r2 = 2 * erand48(Xi);
+                        double dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+                        double dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
 
                         Vec3 p((sx + .5 + dx) / 2 + x, (sy + .5 + dy) / 2 + y);
                         Ray d = cam->generateRay(p, Xi);

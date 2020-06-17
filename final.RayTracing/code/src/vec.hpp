@@ -5,9 +5,9 @@
 
 struct Vec3
 {
-    float x, y, z;
+    double x, y, z;
 
-    Vec3(float x_=0, float y_=0, float z_=0): x(x_), y(y_), z(z_) {}
+    Vec3(double x_=0, double y_=0, double z_=0): x(x_), y(y_), z(z_) {}
     Vec3(const Vec3& v): x(v.x), y(v.y), z(v.z) {}
 
     Vec3 operator-() const { return Vec3(-x, -y, -z); }
@@ -20,20 +20,20 @@ struct Vec3
     Vec3& operator*=(const Vec3& v) { return *this = *this * v; }
     Vec3& operator/=(const Vec3& v) { return *this = *this / v; }
     
-    Vec3 operator+(float a) const { return Vec3(x+a, y+a, z+a); }
-    Vec3 operator-(float a) const { return Vec3(x-a, y-a, z-a); }
-    Vec3 operator*(float a) const { return Vec3(x*a, y*a, z*a); }
-    Vec3 operator/(float a) const { return Vec3(x/a, y/a, z/a); }
-    Vec3& operator+=(float a) { return *this = *this + a; }
-    Vec3& operator-=(float a) { return *this = *this - a; }
-    Vec3& operator*=(float a) { return *this = *this * a; }
-    Vec3& operator/=(float a) { return *this = *this / a; }
+    Vec3 operator+(double a) const { return Vec3(x+a, y+a, z+a); }
+    Vec3 operator-(double a) const { return Vec3(x-a, y-a, z-a); }
+    Vec3 operator*(double a) const { return Vec3(x*a, y*a, z*a); }
+    Vec3 operator/(double a) const { return Vec3(x/a, y/a, z/a); }
+    Vec3& operator+=(double a) { return *this = *this + a; }
+    Vec3& operator-=(double a) { return *this = *this - a; }
+    Vec3& operator*=(double a) { return *this = *this * a; }
+    Vec3& operator/=(double a) { return *this = *this / a; }
 
     bool operator==(const Vec3& v) const { return x==v.x && y==v.y && z==v.z; }
     bool operator!=(const Vec3& v) const { return !(*this == v); }
 
-    float dot(const Vec3& v) const { return x*v.x + y*v.y + z*v.z; }
-    float operator^(const Vec3& v) const { return x*v.x + y*v.y + z*v.z; }
+    double dot(const Vec3& v) const { return x*v.x + y*v.y + z*v.z; }
+    double operator^(const Vec3& v) const { return x*v.x + y*v.y + z*v.z; }
     Vec3 cross(const Vec3& v) const {
         return Vec3(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x);
     }
@@ -44,14 +44,16 @@ struct Vec3
     Vec3 normalized() const { return *this / len(); }
     Vec3 clamped() const { return Vec3(clamp(x), clamp(y), clamp(z)); } 
     
-    Vec3 reflect(const Vec3& n) const { return *this - n * dot(n) * 2.; }
+    Vec3 reflect(const Vec3& n) const {
+        return (*this - n * dot(n) * 2.).normalized();
+    }
     // refract ??
 
-    float len2() const { return x*x + y*y + z*z; }
-    float len() const { return sqrt(len2()); }
+    double len2() const { return x*x + y*y + z*z; }
+    double len() const { return sqrt(len2()); }
 
-    float max() const { return x>y && x>z ? x : y>z ? y : z; }
-    float min() const { return x<y && x<z ? x : y<z ? y : z; }
+    double max() const { return x>y && x>z ? x : y>z ? y : z; }
+    double min() const { return x<y && x<z ? x : y<z ? y : z; }
     bool non_zero() const {
         return x>eps || x<-eps || y>eps || y<-eps || z>eps || z<-eps;
     }

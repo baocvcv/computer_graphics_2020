@@ -28,8 +28,8 @@ int main(int argc, char *argv[]) {
     // SceneParser sp(inputFile.c_str());
 
     Image outImg;
-    Scene sc = getScene2();
-    renderFrame(sc, outImg, 30);
+    Scene sc = getScene3();
+    renderFrame(sc, outImg, 80);
     // auto sp("../testcases/scene01_basic.txt");
     // renderFrame(sp, outImg, 40);
     outImg.SaveImage(outputFile.c_str());

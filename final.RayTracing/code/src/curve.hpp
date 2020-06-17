@@ -4,25 +4,25 @@
 #include "common.hpp"
 #include "object3d.hpp"
 
-typedef std::pair<int, std::vector<std::pair<float, float>>> Basis;
+typedef std::pair<int, std::vector<std::pair<double, double>>> Basis;
 
 class Bernstein {
 public:
-    Bernstein(int _n, int _k, const std::vector<float>& _t) :
+    Bernstein(int _n, int _k, const std::vector<double>& _t) :
             n(_n), k(_k), t(_t), tpad(_t)
     {
-        std::vector<float> pad(k, t.back());
+        std::vector<double> pad(k, t.back());
         tpad.insert(tpad.end(), pad.begin(), pad.end());
     }
 
-    static std::vector<float> bezier_knot(int k)
+    static std::vector<double> bezier_knot(int k)
     {
-        std::vector<float> v0(k + 1, .0), v1(k+1, 1.);
+        std::vector<double> v0(k + 1, .0), v1(k+1, 1.);
         v0.insert(v0.end(), v1.begin(), v1.end());
         return v0;
     }
 
-    int get_bpos(float mu) const
+    int get_bpos(double mu) const
     {
         if (mu < t[0] || t.back() < mu) {
             return -1;
@@ -42,21 +42,21 @@ public:
         }
     }
 
-    std::pair<float, float> get_valid_range() const
+    std::pair<double, double> get_valid_range() const
     {
         return std::make_pair(t[k], t[t.size()-k-1]);
     }
 
-    Basis evaluate(float mu) const
+    Basis evaluate(double mu) const
     {
         auto bpos = get_bpos(mu);
-        std::vector<float> s(k+2, .0);
+        std::vector<double> s(k+2, .0);
         s[k] = 1;
-        std::vector<float> ds(k+1, 1.);
+        std::vector<double> ds(k+1, 1.);
         for (int p = 1; p < k + 1; p++) {
             for (int ii = k - p; ii < k + 1; ii++) {
                 int i = ii + bpos - k;
-                float w1, w2, dw1, dw2;
+                double w1, w2, dw1, dw2;
                 if (tpad[i+p] == tpad[i]) {
                     w1 = mu;
                     dw1 = 1;
@@ -91,7 +91,7 @@ public:
                 ds.pop_back();
             }
         }
-        std::vector<std::pair<float, float>> sds;
+        std::vector<std::pair<double, double>> sds;
         for (int i = 0; i < s.size(); i++) {
             sds.emplace_back(s[i], ds[i]);
         }
@@ -100,8 +100,8 @@ public:
 
 private:
     int n, k;
-    std::vector<float> t;
-    std::vector<float> tpad;
+    std::vector<double> t;
+    std::vector<double> tpad;
 };
 
 // The CurvePoint object stores information about a point on a curve
@@ -110,9 +110,9 @@ private:
 struct CurvePoint {
     Vec3 V; // Vertex
     Vec3 T; // Tangent  (unit)
-    float t;
+    double t;
 
-    CurvePoint(const Vec3& _V, const Vec3& _T, float _t) :
+    CurvePoint(const Vec3& _V, const Vec3& _T, double _t) :
         V(_V), T(_T), t(_t) {}
 };
 
@@ -123,7 +123,7 @@ public:
 
     explicit Curve(std::vector<Vec3> points) : controls(std::move(points)) {}
 
-    bool intersect(const Ray &r, Hit &h, float tmin) override {
+    bool intersect(const Ray &r, Hit &h, double tmin) override {
         return false;
     }
 
@@ -134,7 +134,7 @@ public:
     virtual void discretize(int resolution, std::vector<CurvePoint>& data) = 0;
 
     // returns vertex and tangent
-    std::pair<Vec3, Vec3> evaluate(const Bernstein& bern, float ti) {
+    std::pair<Vec3, Vec3> evaluate(const Bernstein& bern, double ti) {
         auto basis = bern.evaluate(ti);
         int len = basis.second.size();
         auto vertex = Vec3();
@@ -147,9 +147,9 @@ public:
         return {vertex, tangent};
     }
 
-    std::pair<float, float> get_valid_range() { return bern->get_valid_range(); }
+    std::pair<double, double> get_valid_range() { return bern->get_valid_range(); }
 
-    virtual std::pair<Vec3, Vec3> evaluate(float ti) = 0;
+    virtual std::pair<Vec3, Vec3> evaluate(double ti) = 0;
 };
 
 class BezierCurve : public Curve {
@@ -167,7 +167,7 @@ public:
 
     void discretize(int resolution, std::vector<CurvePoint>& data) override {
         data.clear();
-        std::vector<float> t(resolution, .0);
+        std::vector<double> t(resolution, .0);
         t.back() = 1.;
         for (int i = 1; i < resolution-1; i++) {
             t[i] = 1.0 * i / (resolution - 1);
@@ -179,7 +179,7 @@ public:
         }
     }
 
-    std::pair<Vec3, Vec3> evaluate(float ti) {
+    std::pair<Vec3, Vec3> evaluate(double ti) {
         return Curve::evaluate(*bern, ti);
     }
 };
@@ -188,7 +188,7 @@ class BsplineCurve : public Curve {
 public:
     const int k = 3;
     int n;
-    std::vector<float> knots;
+    std::vector<double> knots;
 
     BsplineCurve(const std::vector<Vec3> &points):
         Curve(points), n(points.size()) {
@@ -214,7 +214,7 @@ public:
         }
     }
 
-    std::pair<Vec3, Vec3> evaluate(float ti) {
+    std::pair<Vec3, Vec3> evaluate(double ti) {
         return Curve::evaluate(*bern, ti);
     }
 };

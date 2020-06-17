@@ -21,7 +21,7 @@ struct RevSurface : public Object3D
         NodeType type;
         Node* children[4];
         // u[2]: theta_min, theta_max; v[2]: t_min, t_max
-        float u[2], v[2];
+        double u[2], v[2];
         AABB box;
 
         Node() {}
@@ -31,7 +31,7 @@ struct RevSurface : public Object3D
         Node (Node* c1, Node* c2, Node* c3, Node* c4):
             type(NodeType::INTERNAL), children{c1, c2, c3, c4},
             box(c1->box, c2->box, c3->box, c4->box) {}
-        Node (float u0, float u1, float v0, float v1, const AABB& _box):
+        Node (double u0, double u1, double v0, double v1, const AABB& _box):
             type(NodeType::LEAF), u{u0, u1}, v{v0, v1}, box(_box) {}
     };
     // TODO: extend to BSpline curve as well
@@ -68,9 +68,9 @@ struct RevSurface : public Object3D
             const CurvePoint& cp0 = points[ci];
             const CurvePoint& cp1 = points[ci+1];
             for (unsigned int i = 0; i < steps; i++) {
-                float t[] = {
-                    (float) i / steps * 2 * M_PI,
-                    (float) ((i+1) % steps) / steps * 2 * M_PI
+                double t[] = {
+                    (double) i / steps * 2 * M_PI,
+                    (double) ((i+1) % steps) / steps * 2 * M_PI
                 };
                 Vec3 vs[] = { // vertices of AABB
                     getPoint(cp0.V, t[0]), getPoint(cp0.V, t[1]),
@@ -141,24 +141,24 @@ struct RevSurface : public Object3D
     }
 
     // acquire point on surface with v rorated rad radians
-    Vec3 getPoint(Vec3 v, float rad) {
+    Vec3 getPoint(Vec3 v, double rad) {
         return Vec3(v.x*cos(rad), v.x*sin(rad), v.y);
     }
 
-    bool intersect(const Ray &r, Hit &h, float tmin) override {
+    bool intersect(const Ray &r, Hit &h, double tmin) override {
         // intersect quad-tree, use (t_near + t_far) / 2 as estimate for t
         auto result = intersect_tree(&nodes[root], r);
         if (result.first == nullptr) {
             return false;
         }
-        float t_near = result.second.first;
-        float t_far = result.second.second;
-        float t0 = (t_near + t_far) / 2;
+        double t_near = result.second.first;
+        double t_far = result.second.second;
+        double t0 = (t_near + t_far) / 2;
 
         // estimate u, v
         Node* leaf = result.first;
-        float u0 = (leaf->u[0] + leaf->u[1]) / 2;
-        float v0 = (leaf->v[0] + leaf->v[1]) / 2;
+        double u0 = (leaf->u[0] + leaf->u[1]) / 2;
+        double v0 = (leaf->v[0] + leaf->v[1]) / 2;
         // TODO: handle ray from inside the rev volume
 
         // newton
@@ -174,12 +174,12 @@ struct RevSurface : public Object3D
         auto du = Vec3(-sin(x0.y)*p.x, cos(x0.y)*p.x, 0);
         auto dv = Vec3(cos(x0.y)*dp.x, sin(x0.y)*dp.x, dp.y);
         // { // check if derivatives are correct
-        //     float u2 = x0.y * (1 + 1e-5);
+        //     double u2 = x0.y * (1 + 1e-5);
         //     auto p2 = getPoint(p, u2);
         //     auto du2 = (p2 - realPoint) / (u2 - x0.y);
-        //     float diff = (du2 - du).len();
+        //     double diff = (du2 - du).len();
         //     assert(diff < 0.1);
-        //     float v2 = x0.z * (1 + 1e-5);
+        //     double v2 = x0.z * (1 + 1e-5);
         //     p2 = getPoint(pCurve->evaluate(v2).first, x0.y);
         //     auto dv2 = (p2 - realPoint) / (v2 - x0.z);
         //     diff = (dv2 - dv).len();
@@ -191,17 +191,16 @@ struct RevSurface : public Object3D
         for (int i = 0; i < NEWTON_MAX_ITER; i++) {
             //TODO: change limits
             // if (f.max() < 1e-1 && f.min() > -1e-1) { // found intersection
-            if (f.max() < 1e-6 && f.min() > -1e-6 && x0.x > tmin) { // found intersection
+            if (f.max() < eps && f.min() > -eps && x0.x > tmin) { // found intersection
                 Vec3 normal = du.cross(dv).normalized();
                 h.set(x0.x, material, normal, Vec3(x0.y/(2*M_PI), x0.z));
                 return true;
             // } else if (x0.y<leaf->u[0] || x0.y>leaf->u[1] || x0.z<leaf->v[0] || x0.z>leaf->v[1]) {
-            } else if (x0.x < -0.1 || x0.y<0 || x0.y>2*M_PI) { // very loose condition
+            } else if (x0.x < -.05 || x0.y<0 || x0.y>=2*M_PI) { // very loose condition
                 return false;
             }
             // iter
-            auto dx0 = jacobian_inv.mult(f, false);
-            x0 = x0 - dx0;
+            x0 = x0 - jacobian_inv.mult(f, false);
             if (x0.z < v_bound.first || x0.z > v_bound.second) return false;
             curvePoint = pCurve->evaluate(x0.z);
             p = curvePoint.first;
@@ -216,9 +215,9 @@ struct RevSurface : public Object3D
     }
 
     // returns <best_node, <t_near, t_far>>
-    std::pair<Node*, std::pair<float, float>> intersect_tree(
+    std::pair<Node*, std::pair<double, double>> intersect_tree(
         Node* node, const Ray& r) {
-            float t_near, t_far;
+            double t_near, t_far;
             bool has_intersect = node->box.intersect(r, t_near, t_far);
             if (!has_intersect) {
                 return {nullptr, {t_near, t_far}};
@@ -234,8 +233,8 @@ struct RevSurface : public Object3D
                         auto result = intersect_tree(node->children[i], r);
                         if (result.first != nullptr) {
                             // first intersection, or a closer intersection
-                            float tn = result.second.first;
-                            float tf = result.second.second;
+                            double tn = result.second.first;
+                            double tf = result.second.second;
                             bool cond1 = t_near > 0 && tn > 0 && tn < t_near;
                             bool cond2 = t_near < 0 && tn > 0;
                             bool cond3 = t_near < 0 && tn < 0 && tf < t_far;

@@ -7,14 +7,14 @@
 - Design good looking scenes
 
 # Timeline
-- [x] integrate smallpt 6.10
-- [x] add texture mapping 6.10
+- [x] integrate smallpt
+- [x] add texture mapping
 - [x] Bezier
-- [ ] kd-tree 6.11
-- [ ] PM/PPM 6.12
-- [x] aperture 6.13
-- [ ] CUDA 6.14
-- [ ] scenes 6.15
+- [ ] kd-tree
+- [ ] PM/PPM
+- [x] aperture
+- [ ] CUDA
+- [ ] scenes
 
 ## stuff to learn
 - diffuse luminaire

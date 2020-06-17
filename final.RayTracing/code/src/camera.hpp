@@ -36,11 +36,11 @@ struct Camera {
 // TODO: Implement Perspective camera
 // You can add new functions or variables whenever needed.
 struct PerspectiveCamera : public Camera {
-    float distToCanvas;
+    double distToCanvas;
     Vec3 bottomLeft;
 
     PerspectiveCamera(const Vec3 &center, const Vec3 &direction,
-            const Vec3 &up, int imgW, int imgH, float angle) : Camera(center, direction, up, imgW, imgH) {
+            const Vec3 &up, int imgW, int imgH, double angle) : Camera(center, direction, up, imgW, imgH) {
         // angle is in radian.
         distToCanvas = imgW / 2.0 / tan(angle / 2);
         bottomLeft = this->center + this->direction * distToCanvas
@@ -58,8 +58,8 @@ struct PerspectiveCamera : public Camera {
 };
 
 struct DoFCamera : public PerspectiveCamera {
-    float focus_to_canvas_ratio;
-    float lens_radius;
+    double focus_to_canvas_ratio;
+    double lens_radius;
 
     DoFCamera(
         const Vec3& center,
@@ -67,9 +67,9 @@ struct DoFCamera : public PerspectiveCamera {
         const Vec3& up,
         int imgW,
         int imgH,
-        float angle,
-        float _aperture,
-        float focusDist
+        double angle,
+        double _aperture,
+        double focusDist
     ): PerspectiveCamera(center, direction, up, imgW, imgH, angle), lens_radius(_aperture/2) {
         focus_to_canvas_ratio = focusDist / distToCanvas;
     }

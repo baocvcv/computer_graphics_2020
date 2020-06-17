@@ -86,7 +86,7 @@ public:
             computeNormal();
     }
 
-    bool intersect(const Ray &r, Hit &h, float tmin) override {
+    bool intersect(const Ray &r, Hit &h, double tmin) override {
         // Optional: Change this brute force method into a faster one.
         // TODO: kdtree here
         bool result = false;
